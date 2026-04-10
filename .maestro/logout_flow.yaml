@@ -1,0 +1,15 @@
+appId: com.x031pjs.jealthapp
+---
+# 로그인 상태면 로그아웃
+- runFlow:
+    when:
+      visible: "오늘의 건강"
+    commands:
+      # 설정 탭 (4번째 탭, 우측) - NativeTabs는 좌표로 탭
+      - tapOn:
+          point: "88%, 97%"
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - tapOn: "로그아웃"
+      - waitForAnimationToEnd:
+          timeout: 10000

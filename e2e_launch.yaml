@@ -1,0 +1,5 @@
+appId: com.x031pjs.jealthapp
+---
+- launchApp
+- waitForAnimationToEnd
+- takeScreenshot: e2e_01_launch

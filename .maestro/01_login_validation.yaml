@@ -1,0 +1,19 @@
+appId: com.x031pjs.jealthapp
+name: "로그인 - 빈 필드 검증"
+---
+- launchApp
+
+# 번들 로딩 대기
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# 로그인 화면이 보이는지 확인
+- assertVisible: "로그인"
+
+# 로그인 버튼 클릭 (두 번째 "로그인" = 버튼)
+- tapOn:
+    text: "로그인"
+    index: 1
+
+# 에러 메시지 확인
+- assertVisible: "이메일과 비밀번호를 입력해주세요."

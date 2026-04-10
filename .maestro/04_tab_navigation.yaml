@@ -1,0 +1,29 @@
+appId: com.x031pjs.jealthapp
+name: "탭 네비게이션"
+---
+- launchApp
+
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# 로그인 안 되어 있으면 로그인
+- runFlow: login_flow.yaml
+
+# 홈 탭 확인
+- assertVisible: "오늘의 건강"
+
+# 기록 탭 이동
+- tapOn: "기록"
+- waitForAnimationToEnd
+
+# 통계 탭 이동
+- tapOn: "통계"
+- waitForAnimationToEnd
+
+# 설정 탭 이동
+- tapOn: "설정"
+- waitForAnimationToEnd
+
+# 다시 홈으로
+- tapOn: "홈"
+- assertVisible: "오늘의 건강"

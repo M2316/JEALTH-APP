@@ -1,0 +1,28 @@
+appId: com.x031pjs.jealthapp
+name: "로그인 - 성공"
+---
+- launchApp
+
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# 로그인 화면 확인
+- assertVisible: "로그인"
+
+# 이메일 입력
+- tapOn: "email@example.com"
+- inputText: "test@test.com"
+
+# 비밀번호 입력
+- tapOn: "비밀번호 입력"
+- inputText: "12345678"
+
+# 로그인 버튼 클릭
+- tapOn:
+    text: "로그인"
+    index: 1
+
+# 홈 화면으로 이동 확인
+- waitForAnimationToEnd:
+    timeout: 10000
+- assertVisible: "오늘의 건강"

@@ -1,0 +1,16 @@
+appId: com.x031pjs.jealthapp
+---
+# 로그인 상태가 아니면 로그인
+- runFlow:
+    when:
+      visible: "로그인"
+    commands:
+      - tapOn: "email@example.com"
+      - inputText: "test@test.com"
+      - tapOn: "비밀번호 입력"
+      - inputText: "12345678"
+      - tapOn:
+          text: "로그인"
+          index: 1
+      - waitForAnimationToEnd:
+          timeout: 10000

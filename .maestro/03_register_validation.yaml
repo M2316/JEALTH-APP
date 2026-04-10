@@ -1,0 +1,30 @@
+appId: com.x031pjs.jealthapp
+name: "회원가입 - 유효성 검증"
+---
+- launchApp
+
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# 로그인 상태면 로그아웃 먼저
+- runFlow:
+    when:
+      visible: "설정"
+    commands:
+      - tapOn: "설정"
+      - tapOn: "로그아웃"
+      - waitForAnimationToEnd
+
+# 회원가입 링크 클릭
+- tapOn: "회원가입"
+
+# 회원가입 화면 확인
+- assertVisible: "회원가입"
+
+# 빈 상태로 제출
+- tapOn:
+    text: "회원가입"
+    index: 1
+
+# 에러 메시지 확인
+- assertVisible: "이름을 입력해주세요."
