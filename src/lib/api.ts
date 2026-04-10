@@ -3,13 +3,11 @@ import { getToken, setToken, removeToken } from './token-storage';
 
 export { getToken, setToken, removeToken };
 
-const DEV_API_HOST = '192.168.0.102';
+const DEV_API_HOST = '192.168.0.105';
 
 const BASE_URL = __DEV__
-  ? Platform.OS === 'web'
-    ? 'http://localhost:3000'
-    : `http://${DEV_API_HOST}:3000`
-  : 'https://api.jealth.com'; // TODO: production URL
+  ? `http://${DEV_API_HOST}:3001`
+  : 'http://jealth.shop';
 
 class ApiError extends Error {
   constructor(
