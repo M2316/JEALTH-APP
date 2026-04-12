@@ -7,7 +7,7 @@ const DEV_API_HOST = '192.168.0.105';
 
 const BASE_URL = __DEV__
   ? `http://${DEV_API_HOST}:3001`
-  : 'http://jealth.shop';
+  : 'https://jealth.shop';
 
 class ApiError extends Error {
   constructor(
