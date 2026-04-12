@@ -1,0 +1,12 @@
+name: Build Android on main push
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build_android:
+    type: build
+    params:
+      platform: android
+      profile: preview
