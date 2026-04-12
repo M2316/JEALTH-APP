@@ -1,5 +1,3 @@
-import { Platform } from 'react-native';
-
 import { api, getToken } from '@/lib/api';
 import type {
   MuscleGroup,
@@ -8,13 +6,11 @@ import type {
   CreateRoutinePayload,
 } from '@/types/workout';
 
-const DEV_API_HOST = '192.168.0.102';
+const DEV_API_HOST = '192.168.0.105';
 
 const BASE_URL = __DEV__
-  ? Platform.OS === 'web'
-    ? 'http://localhost:3000'
-    : `http://${DEV_API_HOST}:3000`
-  : 'https://api.jealth.com';
+  ? `http://${DEV_API_HOST}:3001`
+  : 'https://jealth.shop';
 
 export function fetchMuscleGroups() {
   return api<MuscleGroup[]>('/exercises/muscle-groups');
