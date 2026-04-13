@@ -64,6 +64,8 @@ export default function RecordScreen() {
   const [routineId, setRoutineId] = useState<string | undefined>();
   const [dirty, setDirty] = useState(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveToServerRef = useRef<() => void>(() => undefined);
+  const latestExercisesRef = useRef<WE[]>([]);
   const [workoutDates, setWorkoutDates] = useState<string[]>([]);
 
   // Bottom bar keyboard hide animation
@@ -95,10 +97,9 @@ export default function RecordScreen() {
   const scheduleSave = useCallback(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      setDirty((d) => {
-        if (d) saveToServer();
-        return false;
-      });
+      saveTimerRef.current = null;
+      setDirty(false);
+      saveToServerRef.current();
     }, 1500);
   }, []);
 
@@ -120,19 +121,22 @@ export default function RecordScreen() {
   );
 
   const saveToServer = useCallback(async () => {
+    if (!routineId) return;
     try {
-      setLocalExercises((current) => {
-        if (routineId) {
-          updateRoutine(routineId, buildPayload(current)).then(() =>
-            loadRoutines(),
-          );
-        }
-        return current;
-      });
-    } catch {
-      // silent
+      await updateRoutine(routineId, buildPayload(latestExercisesRef.current));
+      await loadRoutines();
+    } catch (e) {
+      console.warn('saveToServer failed:', e);
     }
   }, [routineId, buildPayload, updateRoutine, loadRoutines]);
+
+  useEffect(() => {
+    saveToServerRef.current = saveToServer;
+  }, [saveToServer]);
+
+  useEffect(() => {
+    latestExercisesRef.current = localExercises;
+  }, [localExercises]);
 
   const handleDateChange = useCallback(
     (date: string) => {
