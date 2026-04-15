@@ -11,7 +11,7 @@ export interface ToastItem {
 interface ToastState {
   current: ToastItem | null;
   show: (opts: { message: string; variant: ToastVariant }) => void;
-  hide: () => void;
+  hide: (id?: number) => void;
 }
 
 let nextId = 1;
@@ -20,5 +20,8 @@ export const useToastStore = create<ToastState>((set) => ({
   current: null,
   show: ({ message, variant }) =>
     set({ current: { id: nextId++, message, variant } }),
-  hide: () => set({ current: null }),
+  hide: (id) =>
+    set((state) =>
+      id === undefined || state.current?.id === id ? { current: null } : state,
+    ),
 }));

@@ -52,7 +52,7 @@ function Toast({ item, onAutoHide }: ToastProps) {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [item.id]);
+  }, []);
 
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -80,7 +80,9 @@ export function ToastHost() {
 
   return (
     <SafeAreaView edges={['top']} style={styles.host} pointerEvents="box-none">
-      {current && <Toast key={current.id} item={current} onAutoHide={hide} />}
+      {current && (
+        <Toast key={current.id} item={current} onAutoHide={() => hide(current.id)} />
+      )}
     </SafeAreaView>
   );
 }
