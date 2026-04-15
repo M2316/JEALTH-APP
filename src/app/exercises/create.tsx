@@ -19,13 +19,15 @@ import { MuscleGroupBadge } from '@/components/workout/muscle-group-badge';
 import { DarkTheme } from '@/constants/theme';
 import { haptic } from '@/lib/haptics';
 import { useExerciseStore } from '@/stores/exercise-store';
+import { useWorkoutStore } from '@/stores/workout-store';
 
 const EQUIPMENT_OPTIONS = ['바벨', '덤벨', '머신', '맨몸'] as const;
 
 export default function CreateExerciseScreen() {
   const router = useRouter();
-  const { muscleGroups, loadMuscleGroups, addExercise, uploadImage } =
+  const { muscleGroups, exercises, loadMuscleGroups, loadExercises, addExercise, uploadImage } =
     useExerciseStore();
+  const setPendingExerciseToAdd = useWorkoutStore((s) => s.setPendingExerciseToAdd);
 
   const [name, setName] = useState('');
   const [equipment, setEquipment] = useState('');
@@ -35,7 +37,8 @@ export default function CreateExerciseScreen() {
 
   useEffect(() => {
     loadMuscleGroups();
-  }, [loadMuscleGroups]);
+    loadExercises();
+  }, [loadMuscleGroups, loadExercises]);
 
   const toggleMuscle = (id: string) => {
     setSelectedMuscleIds((prev) =>
@@ -55,11 +58,37 @@ export default function CreateExerciseScreen() {
     }
   };
 
+  const normalize = (s: string) =>
+    s.trim().toLowerCase().replace(/\s+/g, ' ');
+
   const handleSubmit = async () => {
     if (!name.trim()) {
       Alert.alert('오류', '운동 이름을 입력하세요.');
       return;
     }
+
+    const duplicate = exercises.find(
+      (e) => normalize(e.name) === normalize(name),
+    );
+
+    if (duplicate) {
+      Alert.alert(
+        '동일한 이름의 운동이 있습니다',
+        `"${duplicate.name}" 운동을 오늘 루틴에 추가하시겠습니까?`,
+        [
+          { text: '아니오, 다른 이름으로 등록', style: 'cancel' },
+          {
+            text: '네, 기존 운동 추가',
+            onPress: () => {
+              setPendingExerciseToAdd(duplicate);
+              router.back();
+            },
+          },
+        ],
+      );
+      return;
+    }
+
     setSubmitting(true);
     try {
       const exercise = await addExercise({
