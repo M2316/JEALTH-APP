@@ -19,7 +19,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 import { GradientBackground } from '@/components/gradient-background';
 import { GlassSurface } from '@/components/glass-surface';
@@ -56,6 +56,8 @@ export default function RecordScreen() {
     updateRoutine,
     deleteRoutine,
     copyFromRoutine,
+    pendingExerciseToAdd,
+    setPendingExerciseToAdd,
   } = useWorkoutStore();
 
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -215,6 +217,16 @@ export default function RecordScreen() {
       }
     },
     [localExercises, routineId, selectedDate, buildPayload, addRoutine, updateRoutine, loadRoutines],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (pendingExerciseToAdd) {
+        const ex = pendingExerciseToAdd;
+        setPendingExerciseToAdd(null);
+        handleSelectExercise(ex);
+      }
+    }, [pendingExerciseToAdd, handleSelectExercise, setPendingExerciseToAdd]),
   );
 
   const doCopy = useCallback(
