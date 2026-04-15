@@ -99,6 +99,8 @@ export default function RecordScreen() {
     setLocalExercises(incoming.exercises);
     setRoutineId(incoming.id);
     setDirty(false);
+  // routineId/latestExercisesRef intentionally omitted — only re-sync when store pushes new data
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [routines]);
 
   useEffect(() => {
@@ -134,7 +136,9 @@ export default function RecordScreen() {
     if (!routineId) return;
     try {
       await updateRoutine(routineId, buildPayload(latestExercisesRef.current));
-      setDirty(false);
+      if (!saveTimerRef.current) {
+        setDirty(false);
+      }
       toast({ message: '저장 완료', variant: 'success' });
     } catch (e) {
       console.warn('saveToServer failed:', e);
@@ -383,6 +387,7 @@ export default function RecordScreen() {
         return;
       }
       const reindexed = remaining.map((ex, i) => ({ ...ex, order: i + 1 }));
+      latestExercisesRef.current = reindexed;
       setLocalExercises(reindexed);
       if (routineId) {
         try {
