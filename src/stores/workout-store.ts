@@ -7,7 +7,7 @@ import {
   deleteRoutine,
   copyRoutine,
 } from '@/lib/workout-api';
-import type { WorkoutRoutine, CreateRoutinePayload } from '@/types/workout';
+import type { WorkoutRoutine, CreateRoutinePayload, Exercise } from '@/types/workout';
 
 function todayString() {
   const d = new Date();
@@ -18,6 +18,7 @@ interface WorkoutState {
   selectedDate: string;
   routines: WorkoutRoutine[];
   isLoading: boolean;
+  pendingExerciseToAdd: Exercise | null;
 
   setDate: (date: string) => void;
   loadRoutines: () => Promise<void>;
@@ -28,12 +29,14 @@ interface WorkoutState {
   ) => Promise<WorkoutRoutine>;
   deleteRoutine: (id: string) => Promise<void>;
   copyFromRoutine: (sourceId: string) => Promise<WorkoutRoutine>;
+  setPendingExerciseToAdd: (e: Exercise | null) => void;
 }
 
 export const useWorkoutStore = create<WorkoutState>((set, get) => ({
   selectedDate: todayString(),
   routines: [],
   isLoading: false,
+  pendingExerciseToAdd: null,
 
   setDate: (date) => {
     set({ selectedDate: date });
@@ -76,5 +79,9 @@ export const useWorkoutStore = create<WorkoutState>((set, get) => ({
     const routine = await copyRoutine(sourceId, selectedDate);
     set((state) => ({ routines: [...state.routines, routine] }));
     return routine;
+  },
+
+  setPendingExerciseToAdd: (e) => {
+    set({ pendingExerciseToAdd: e });
   },
 }));
