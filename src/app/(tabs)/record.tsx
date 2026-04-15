@@ -193,14 +193,20 @@ export default function RecordScreen() {
           await updateRoutine(routineId, buildPayload(updated));
           await loadRoutines();
         } catch (e: unknown) {
-          Alert.alert('오류', e instanceof Error ? e.message : '추가 실패');
+          toast({
+            message: e instanceof Error ? e.message : '추가 실패',
+            variant: 'error',
+          });
         }
       } else {
         try {
           await addRoutine(buildPayload([newExercise]));
           await loadRoutines();
         } catch (e: unknown) {
-          Alert.alert('오류', e instanceof Error ? e.message : '추가 실패');
+          toast({
+            message: e instanceof Error ? e.message : '추가 실패',
+            variant: 'error',
+          });
         }
       }
     },
@@ -250,7 +256,10 @@ export default function RecordScreen() {
         try {
           await doCopy(sourceId);
         } catch (e: unknown) {
-          Alert.alert('오류', e instanceof Error ? e.message : '복사 실패');
+          toast({
+            message: e instanceof Error ? e.message : '복사 실패',
+            variant: 'error',
+          });
         }
         return;
       }
@@ -266,7 +275,10 @@ export default function RecordScreen() {
               try {
                 await doAppend(sourceId);
               } catch (e: unknown) {
-                Alert.alert('오류', e instanceof Error ? e.message : '붙여넣기 실패');
+                toast({
+                  message: e instanceof Error ? e.message : '붙여넣기 실패',
+                  variant: 'error',
+                });
               }
             },
           },
@@ -277,7 +289,10 @@ export default function RecordScreen() {
               try {
                 await doOverwrite(sourceId);
               } catch (e: unknown) {
-                Alert.alert('오류', e instanceof Error ? e.message : '덮어쓰기 실패');
+                toast({
+                  message: e instanceof Error ? e.message : '덮어쓰기 실패',
+                  variant: 'error',
+                });
               }
             },
           },
@@ -359,7 +374,7 @@ export default function RecordScreen() {
             await loadRoutines();
           } catch (e) {
             console.error('Delete routine failed:', e);
-            Alert.alert('오류', '루틴 삭제에 실패했습니다.');
+            toast({ message: '삭제 실패', variant: 'error' });
             await loadRoutines();
           }
         } else {
