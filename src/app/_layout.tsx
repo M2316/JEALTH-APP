@@ -6,6 +6,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { ToastHost } from '@/components/ui/toast';
 import { DarkTheme as AppDark } from '@/constants/theme';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -56,6 +57,7 @@ export default function RootLayout() {
         <StatusBar style="light" />
         <AnimatedSplashOverlay />
         <Slot />
+        <ToastHost />
       </ThemeProvider>
     </GestureHandlerRootView>
   );
