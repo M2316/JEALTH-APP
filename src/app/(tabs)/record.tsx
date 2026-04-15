@@ -33,6 +33,7 @@ import { CopyRoutineModal } from '@/components/workout/copy-routine-modal';
 import { FABActionButton } from '@/components/workout/fab-action-button';
 import { DarkTheme } from '@/constants/theme';
 import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
+import { useToast } from '@/components/ui/toast';
 import { useWorkoutStore } from '@/stores/workout-store';
 import type {
   Exercise,
@@ -44,6 +45,7 @@ import type {
 export default function RecordScreen() {
   const router = useRouter();
   const keyboardVisible = useKeyboardVisible();
+  const toast = useToast();
   const {
     selectedDate,
     routines,
@@ -98,7 +100,6 @@ export default function RecordScreen() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       saveTimerRef.current = null;
-      setDirty(false);
       saveToServerRef.current();
     }, 1500);
   }, []);
@@ -124,11 +125,13 @@ export default function RecordScreen() {
     if (!routineId) return;
     try {
       await updateRoutine(routineId, buildPayload(latestExercisesRef.current));
-      await loadRoutines();
+      setDirty(false);
+      toast({ message: '저장 완료', variant: 'success' });
     } catch (e) {
       console.warn('saveToServer failed:', e);
+      toast({ message: '저장 실패', variant: 'error' });
     }
-  }, [routineId, buildPayload, updateRoutine, loadRoutines]);
+  }, [routineId, buildPayload, updateRoutine, toast]);
 
   useEffect(() => {
     saveToServerRef.current = saveToServer;
