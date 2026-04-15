@@ -82,13 +82,22 @@ export default function RecordScreen() {
   }));
 
   useEffect(() => {
-    if (routines.length > 0) {
-      setLocalExercises(routines[0].exercises);
-      setRoutineId(routines[0].id);
-    } else {
+    if (routines.length === 0) {
       setLocalExercises([]);
       setRoutineId(undefined);
+      setDirty(false);
+      return;
     }
+    const incoming = routines[0];
+    if (
+      incoming.id === routineId &&
+      JSON.stringify(incoming.exercises) ===
+        JSON.stringify(latestExercisesRef.current)
+    ) {
+      return;
+    }
+    setLocalExercises(incoming.exercises);
+    setRoutineId(incoming.id);
     setDirty(false);
   }, [routines]);
 
