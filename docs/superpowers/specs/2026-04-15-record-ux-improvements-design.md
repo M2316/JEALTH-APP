@@ -20,7 +20,7 @@
 |---|---|---|
 | 1 | 자동저장 성공 후 `loadRoutines()` 호출을 제거. 낙관적 업데이트로 store만 갱신. | 깜빡임의 직접 원인. `workout-store.updateRoutine`이 이미 응답을 받아 store routines를 in-place 교체한다. 추가 fetch 불필요. |
 | 2 | `useEffect([routines])`에서 의미적 동등성 검사 후 동일하면 setLocalExercises를 스킵. | 자동저장 결과(같은 값)로 인한 불필요한 리렌더 차단. 외부 변경(날짜/픽커/복사)은 여전히 흡수. |
-| 3 | 자체 토스트 시스템 신규 구현 (Glass 디자인 일관성). | 서드파티 토스트는 디자인 시스템과 이질감. 의존성 추가 회피. |
+| 3 | 자체 토스트 시스템 신규 구현 (Glass 디자인 일관성). 색상은 기존 theme 토큰 재사용 (`accentCyan`, `statusDanger`). | 서드파티 토스트는 디자인 시스템과 이질감. 의존성 추가 회피. theme에 이미 `statusDanger: '#FF4F6A'`가 존재하므로 새 토큰 추가는 의미적 중복. |
 | 4 | 토스트 트리거: 자동저장 **성공**만 + 모든 저장 액션의 **실패**. | 즉각적인 명시적 액션은 결과가 화면에 즉시 보이므로 성공 토스트가 노이즈. 자동저장은 비가시적이므로 안심 신호 필요. 실패는 어떤 액션이든 알아야 한다. |
 | 5 | 운동명 중복 검사는 **클라이언트만**. submit 시 1회. | 운동은 사용자 개인 사전(`createdBy`로 유저별 묶임). 1인 1계정이라 race 위험 없음. 즉각 피드백 + 네트워크 라운드트립 회피. |
 | 6 | 중복 발견 시 `Alert.alert`로 "기존 운동을 오늘 루틴에 추가하시겠습니까?" 다이얼로그. "네" → 신규 등록 취소 + 기존 운동을 오늘 루틴에 자동 추가 후 record 복귀. | 사용자가 항상 "운동 추가" 맥락에서 이 화면에 도달한다는 전제. 다이얼로그가 약속한 행동을 그대로 수행. |
@@ -115,7 +115,7 @@ useEffect(() => {
 - **신규** `src/stores/toast-store.ts` — Zustand store
 - **신규** `src/components/ui/toast.tsx` — `Toast` 컴포넌트, `ToastHost`, `useToast()` 훅
 - **수정** `src/app/_layout.tsx` — 루트에 `<ToastHost />` 마운트 (GestureHandlerRootView 안쪽)
-- **수정** `src/constants/theme.ts` — `accentRed: '#FF6B6B'` 추가
+- **수정 없음** `src/constants/theme.ts` — 기존 `statusDanger`/`accentCyan` 토큰 재사용
 
 ### Store
 
@@ -137,9 +137,9 @@ interface ToastState {
 - `Toast`:
   - `GlassSurface bordered` 캡슐 (border-radius 22).
   - 좌측 아이콘: success → `✅`, error → `⚠️`.
-  - 텍스트: `Fonts.body`, 14px, weight 600, `DarkTheme.textPrimary`.
-  - border 색: success → `DarkTheme.accentCyan`, error → `DarkTheme.accentRed`.
-  - 패딩: 가로 `Spacing.md`, 세로 `Spacing.sm`.
+  - 텍스트: 14px, weight 600, `DarkTheme.textPrimary` (시스템 폰트).
+  - border 색: success → `DarkTheme.accentCyan`, error → `DarkTheme.statusDanger`.
+  - 패딩: 가로 `Spacing.three` (16), 세로 `Spacing.two` (8).
 - 애니메이션 (Reanimated 4):
   - mount: `translateY: -40 → 0`, `opacity: 0 → 1`, `withSpring({ damping: 18, stiffness: 220 })`.
   - 자동 닫힘 타이머: success 1500ms, error 3000ms.
