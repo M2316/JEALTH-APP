@@ -19,7 +19,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { GradientBackground } from '@/components/gradient-background';
 import { GlassSurface } from '@/components/glass-surface';
@@ -44,6 +44,7 @@ import type {
 
 export default function RecordScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ copyOnOpen?: string }>();
   const keyboardVisible = useKeyboardVisible();
   const toast = useToast();
   const {
@@ -227,6 +228,15 @@ export default function RecordScreen() {
         handleSelectExercise(ex);
       }
     }, [pendingExerciseToAdd, handleSelectExercise, setPendingExerciseToAdd]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (params.copyOnOpen === '1') {
+        setCopyVisible(true);
+        router.setParams({ copyOnOpen: undefined });
+      }
+    }, [params.copyOnOpen, router]),
   );
 
   const doCopy = useCallback(
