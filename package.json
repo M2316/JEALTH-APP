@@ -8,7 +8,9 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
@@ -48,9 +50,12 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.2.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "55.0.1-canary-20260328-2049187",
+    "jest": "^30.3.0",
+    "jest-expo": "^55.0.16",
     "typescript": "~5.9.2"
   },
   "private": true
