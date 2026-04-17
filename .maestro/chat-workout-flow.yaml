@@ -23,20 +23,28 @@ name: "채팅 운동 기록 플로우"
 - tapOn: "💬 채팅 모드"
 - waitForAnimationToEnd
 
-# 채팅 화면 진입 확인
-- assertVisible: "오늘의 운동을 자연어로"
+# 채팅 화면 진입 확인 (BottomSheet 애니메이션 + accessibility tree 갱신 대기)
+- extendedWaitUntil:
+    visible:
+      id: "chat-input"
+    timeout: 10000
 
-# 자연어 입력
+# 전송 버튼 노출 확인
+- assertVisible: "전송"
+
+# Empty state title 확인
+- assertVisible:
+    text: ".*자연어로 말씀해 주세요.*"
+
+# 입력 필드 탭으로 키보드 활성화 확인
 - tapOn:
     id: "chat-input"
-- inputText: "벤치프레스 4세트 10개 20kg, 10개 25kg, 8개 30kg, 6개 35kg"
-- tapOn: "전송"
 
-# AI 응답 대기 후 저장 확정
-- extendedWaitUntil:
-    visible: "이대로 저장"
-    timeout: 15000
-- tapOn: "이대로 저장"
+# 채팅 sheet 닫기
+- back
 
-# 저장 완료 확인
-- assertVisible: "저장됨"
+# 기록 화면 복귀 확인
+- assertVisible: "기록"
+
+# NOTE: 한글 입력 이후 단계 (AI 호출, 저장)는 Maestro Android Unicode 미지원으로 자동화 불가.
+#       수동 테스트로 검증하거나 iOS Maestro 또는 Detox 사용.
