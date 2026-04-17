@@ -22,6 +22,7 @@ interface ChatState {
   messages: ChatMessage[];
   isSending: boolean;
   confidenceByMsgId: Record<number, 'high' | 'low'>;
+  parseSuccessByMsgId: Record<number, boolean>;
 
   openForDate: (date: string) => Promise<void>;
   sendMessage: (text: string) => Promise<void>;
@@ -48,6 +49,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   isSending: false,
   confidenceByMsgId: {},
+  parseSuccessByMsgId: {},
 
   openForDate: async (date) => {
     await initChatDb();
@@ -57,14 +59,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messages,
       isSending: false,
       confidenceByMsgId: {},
+      parseSuccessByMsgId: {},
     });
   },
 
   sendMessage: async (text) => {
+    console.log('[chat-store] sendMessage called', { textLen: text.length, currentDate: get().currentDate });
     const date = get().currentDate;
-    if (!date) return;
+    if (!date) { console.warn('[chat-store] no currentDate, abort'); return; }
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed) { console.warn('[chat-store] empty text, abort'); return; }
 
     const now = Date.now();
     const userId = await insertMessage({
@@ -112,6 +116,13 @@ export const useChatStore = create<ChatState>((set, get) => ({
         confidenceByMsgId: {
           ...s.confidenceByMsgId,
           [assistantId]: res.confidence,
+        },
+        parseSuccessByMsgId: {
+          ...s.parseSuccessByMsgId,
+          // 서버가 parseSuccess 안 주는 구버전 호환: confidence high && exercises 존재하면 true
+          [assistantId]: typeof res.parseSuccess === 'boolean'
+            ? res.parseSuccess
+            : (res.confidence === 'high' && res.draft.exercises.length > 0),
         },
       }));
     } catch (err) {
@@ -210,15 +221,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   closeAndCleanup: async () => {
-    const date = get().currentDate;
-    if (date) {
-      await discardPendingForDate(date);
-    }
+    // pending draft 는 의도적으로 유지: 사용자가 sheet 를 닫았다가 다시 열어도
+    // 미승인 초안에 승인 버튼을 다시 눌러 저장할 수 있도록 한다.
     set({
       currentDate: null,
       messages: [],
       isSending: false,
       confidenceByMsgId: {},
+      parseSuccessByMsgId: {},
     });
   },
 }));

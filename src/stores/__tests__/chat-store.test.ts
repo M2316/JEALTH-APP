@@ -21,6 +21,7 @@ describe('chat-store', () => {
     sendMock.mockResolvedValue({
       reply: '맞나요?',
       confidence: 'high',
+      parseSuccess: true,
       draft: {
         exercises: [{
           exerciseId: 'ex-1', name: '벤치프레스',
@@ -41,6 +42,7 @@ describe('chat-store', () => {
     sendMock.mockResolvedValue({
       reply: '맞나요?',
       confidence: 'high',
+      parseSuccess: true,
       draft: {
         exercises: [{
           exerciseId: 'ex-1', name: 'x',

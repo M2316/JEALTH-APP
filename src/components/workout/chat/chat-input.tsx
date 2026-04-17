@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { DarkTheme } from '@/constants/theme';
 
 interface Props { disabled: boolean; sending: boolean; onSend: (text: string) => void; }
@@ -7,10 +8,16 @@ interface Props { disabled: boolean; sending: boolean; onSend: (text: string) =>
 export function ChatInput({ disabled, sending, onSend }: Props) {
   const [text, setText] = useState('');
   const canSend = !disabled && !sending && text.trim().length > 0;
-  const submit = () => { if (!canSend) return; onSend(text); setText(''); };
+  const submit = () => {
+    console.log('[ChatInput] submit pressed', { canSend, textLen: text.length, sending, disabled });
+    if (!canSend) return;
+    console.log('[ChatInput] calling onSend');
+    onSend(text);
+    setText('');
+  };
   return (
     <View style={styles.container}>
-      <TextInput
+      <BottomSheetTextInput
         testID="chat-input"
         style={styles.input}
         value={text}

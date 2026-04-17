@@ -8,41 +8,46 @@ import type { ChatMessage } from '@/types/chat';
 interface Props {
   message: ChatMessage;
   isLowConfidence: boolean;
+  parseSuccess: boolean;
   onApprove: () => void;
   onRetry: () => void;
   saving: boolean;
 }
 
-export function ChatDraftCard({ message, isLowConfidence, onApprove, onRetry, saving }: Props) {
+export function ChatDraftCard({ message, isLowConfidence, parseSuccess, onApprove, onRetry, saving }: Props) {
   if (!message.draft) return null;
   const isSaved = message.status === 'saved';
   const isError = message.status === 'error';
   const isDiscarded = message.status === 'discarded';
   const dim = isSaved || isDiscarded;
+  const showApprove = !isSaved && !isError && !isDiscarded && parseSuccess;
+  const showReinputHint = !isSaved && !isError && !isDiscarded && !parseSuccess;
 
   return (
     <View style={styles.wrapper}>
       <GlassSurface bordered borderRadius={14} style={[styles.card, dim && styles.cardDimmed, isError && styles.cardError]}>
-        {isLowConfidence && !isSaved && (
+        {isLowConfidence && !isSaved && parseSuccess && (
           <View style={styles.warnBanner}><Text style={styles.warnText}>확실치 않아요. 한 번 확인해주세요</Text></View>
         )}
-        {message.draft.exercises.map((ex, exIdx) => (
-          <View key={`${ex.exerciseId}-${exIdx}`} style={styles.exerciseBlock}>
-            <Text style={[styles.exerciseName, dim && styles.dimText]}>{ex.name}</Text>
-            {ex.sets.map((s) => (
-              <Text key={s.round} style={[styles.setLine, dim && styles.dimText]}>
-                {s.round}세트 · {s.reps}reps · {s.weight}{s.weightUnit}
-              </Text>
-            ))}
-          </View>
-        ))}
+        {message.draft.exercises.length > 0 ? (
+          message.draft.exercises.map((ex, exIdx) => (
+            <View key={`${ex.exerciseId}-${exIdx}`} style={styles.exerciseBlock}>
+              <Text style={[styles.exerciseName, dim && styles.dimText]}>{ex.name}</Text>
+              {ex.sets.map((s) => (
+                <Text key={s.round} style={[styles.setLine, dim && styles.dimText]}>
+                  {s.round}세트 · {s.reps}reps · {s.weight}{s.weightUnit}
+                </Text>
+              ))}
+            </View>
+          ))
+        ) : null}
         {isSaved && (<View style={styles.savedFooter}><Text style={styles.savedLabel}>✅ 저장됨</Text></View>)}
         {isError && (
           <Pressable style={styles.retryButton} onPress={() => { haptic.medium(); onRetry(); }}>
             <Text style={styles.retryText}>다시 시도</Text>
           </Pressable>
         )}
-        {!isSaved && !isError && !isDiscarded && (
+        {showApprove && (
           <Pressable
             style={[styles.approveButton, saving && styles.approveDisabled]}
             disabled={saving}
@@ -50,6 +55,11 @@ export function ChatDraftCard({ message, isLowConfidence, onApprove, onRetry, sa
           >
             {saving ? <ActivityIndicator color={DarkTheme.bgPrimary} /> : <Text style={styles.approveText}>✅ 이대로 저장</Text>}
           </Pressable>
+        )}
+        {showReinputHint && (
+          <View style={styles.reinputHint}>
+            <Text style={styles.reinputText}>정확히 인식하지 못했어요. 운동명·세트·무게를 명확히 다시 입력해주세요.</Text>
+          </View>
         )}
       </GlassSurface>
     </View>
@@ -74,4 +84,6 @@ const styles = StyleSheet.create({
   approveText: { color: DarkTheme.bgPrimary, fontWeight: '700' },
   retryButton: { borderColor: '#ff5b5b', borderWidth: 1, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
   retryText: { color: '#ff5b5b', fontWeight: '600' },
+  reinputHint: { backgroundColor: '#2a2014', padding: 10, borderRadius: 8 },
+  reinputText: { color: '#ffd773', fontSize: 13, lineHeight: 18 },
 });

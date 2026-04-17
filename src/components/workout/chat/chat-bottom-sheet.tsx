@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import { StyleSheet, View } from 'react-native';
+import { BottomSheetModal, BottomSheetView, BottomSheetFooter, type BottomSheetFooterProps } from '@gorhom/bottom-sheet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DarkTheme } from '@/constants/theme';
 import { useChatStore } from '@/stores/chat-store';
 import { ChatMessageList } from './chat-message-list';
@@ -14,11 +15,13 @@ interface Props {
 }
 
 export function ChatBottomSheet({ visible, date, onClose }: Props) {
-  const sheetRef = useRef<BottomSheet>(null);
+  const sheetRef = useRef<BottomSheetModal>(null);
+  const insets = useSafeAreaInsets();
   const {
     messages,
     isSending,
     confidenceByMsgId,
+    parseSuccessByMsgId,
     openForDate,
     sendMessage,
     approveDraft,
@@ -39,49 +42,56 @@ export function ChatBottomSheet({ visible, date, onClose }: Props) {
   useEffect(() => {
     if (visible) {
       void openForDate(date);
-      sheetRef.current?.expand();
+      sheetRef.current?.present();
     } else {
-      sheetRef.current?.close();
+      sheetRef.current?.dismiss();
     }
   }, [visible, date, openForDate]);
 
-  const handleClose = useCallback(async () => {
+  const handleDismiss = useCallback(async () => {
     await closeAndCleanup();
     onClose();
   }, [closeAndCleanup, onClose]);
 
-  if (!visible) return null;
+  const renderFooter = useCallback(
+    (props: BottomSheetFooterProps) => (
+      <BottomSheetFooter {...props} bottomInset={insets.bottom}>
+        <View style={{ backgroundColor: DarkTheme.bgPrimary }}>
+          <ChatInput disabled={false} sending={isSending} onSend={(t) => sendMessage(t)} />
+        </View>
+      </BottomSheetFooter>
+    ),
+    [insets.bottom, isSending, sendMessage],
+  );
 
   return (
-    <BottomSheet
+    <BottomSheetModal
       ref={sheetRef}
-      index={0}
       snapPoints={snapPoints}
       enablePanDownToClose
-      onClose={handleClose}
+      onDismiss={handleDismiss}
       backgroundStyle={styles.background}
       handleIndicatorStyle={styles.handle}
+      keyboardBehavior="interactive"
+      keyboardBlurBehavior="restore"
+      android_keyboardInputMode="adjustResize"
+      footerComponent={renderFooter}
     >
       <BottomSheetView style={styles.body}>
-        <KeyboardAvoidingView
-          style={styles.flex}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          {messages.length === 0 ? (
-            <ChatEmptyState />
-          ) : (
-            <ChatMessageList
-              messages={messages}
-              saving={isSending}
-              onApprove={(id) => approveDraft(id)}
-              onRetry={(id) => retryFromError(id)}
-              lowConfidenceIds={lowConfidenceIds}
-            />
-          )}
-          <ChatInput disabled={false} sending={isSending} onSend={(t) => sendMessage(t)} />
-        </KeyboardAvoidingView>
+        {messages.length === 0 ? (
+          <ChatEmptyState />
+        ) : (
+          <ChatMessageList
+            messages={messages}
+            saving={isSending}
+            onApprove={(id) => approveDraft(id)}
+            onRetry={(id) => retryFromError(id)}
+            lowConfidenceIds={lowConfidenceIds}
+            parseSuccessByMsgId={parseSuccessByMsgId}
+          />
+        )}
       </BottomSheetView>
-    </BottomSheet>
+    </BottomSheetModal>
   );
 }
 

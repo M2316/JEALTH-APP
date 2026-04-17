@@ -34,6 +34,11 @@ export interface ChatMessage {
 export interface ChatWorkoutResponse {
   reply: string;
   confidence: 'high' | 'low';
+  /**
+   * AI 가 메시지를 운동 기록으로 정확히 파싱했는지 여부.
+   * true: 승인 버튼 노출. false: 승인 불가, 재입력 안내.
+   */
+  parseSuccess: boolean;
   draft: AssistantDraft;
   candidates?: Array<{ id: string; name: string }>;
 }
