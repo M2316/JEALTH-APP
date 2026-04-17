@@ -31,6 +31,7 @@ import { WorkoutExerciseCard } from '@/components/workout/workout-exercise-card'
 import { ExercisePickerModal } from '@/components/workout/exercise-picker-modal';
 import { CopyRoutineModal } from '@/components/workout/copy-routine-modal';
 import { FABActionButton } from '@/components/workout/fab-action-button';
+import { ChatBottomSheet } from '@/components/workout/chat/chat-bottom-sheet';
 import { DarkTheme } from '@/constants/theme';
 import { useKeyboardVisible } from '@/hooks/use-keyboard-visible';
 import { useToast } from '@/components/ui/toast';
@@ -64,6 +65,7 @@ export default function RecordScreen() {
   const [pickerVisible, setPickerVisible] = useState(false);
   const [copyVisible, setCopyVisible] = useState(false);
   const [calendarVisible, setCalendarVisible] = useState(false);
+  const [chatVisible, setChatVisible] = useState(false);
 
   const [localExercises, setLocalExercises] = useState<WE[]>([]);
   const [routineId, setRoutineId] = useState<string | undefined>();
@@ -571,6 +573,7 @@ export default function RecordScreen() {
         <FABActionButton
           onAddExercise={() => setPickerVisible(true)}
           onCopyRoutine={() => setCopyVisible(true)}
+          onOpenChat={() => setChatVisible(true)}
           hidden={keyboardVisible}
         />
       ) : (
@@ -612,6 +615,12 @@ export default function RecordScreen() {
         visible={copyVisible}
         onClose={() => setCopyVisible(false)}
         onCopy={handleCopyRoutine}
+      />
+
+      <ChatBottomSheet
+        visible={chatVisible}
+        date={selectedDate}
+        onClose={() => setChatVisible(false)}
       />
     </GradientBackground>
   );
