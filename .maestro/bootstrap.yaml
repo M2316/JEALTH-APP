@@ -1,0 +1,21 @@
+appId: com.x031pjs.jealthapp
+name: "Bootstrap - dismiss dev menu and login"
+---
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# dev menu Continue 배너 닫기 (있으면)
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+      - waitForAnimationToEnd:
+          timeout: 5000
+
+# 로그인 (필요하면)
+- runFlow: login_flow.yaml
+
+- waitForAnimationToEnd:
+    timeout: 15000

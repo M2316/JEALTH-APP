@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { todayString } from '@/lib/date';
 import {
   fetchRoutinesByDate,
   createRoutine,
@@ -8,11 +9,6 @@ import {
   copyRoutine,
 } from '@/lib/workout-api';
 import type { WorkoutRoutine, CreateRoutinePayload, Exercise } from '@/types/workout';
-
-function todayString() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
 
 interface WorkoutState {
   selectedDate: string;

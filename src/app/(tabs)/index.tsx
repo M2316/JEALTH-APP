@@ -1,48 +1,58 @@
-import React from 'react';
-import { ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useFocusEffect } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { DashboardCard } from '@/components/dashboard-card';
+import { HeroSection } from '@/components/dashboard/hero-section';
+import { KpiRow } from '@/components/dashboard/kpi-row';
+import { QuickActions } from '@/components/dashboard/quick-actions';
+import { WeeklyVolumeCard } from '@/components/dashboard/weekly-volume-card';
 import { GradientBackground } from '@/components/gradient-background';
-import { MiniChart } from '@/components/mini-chart';
-import { ThemedText } from '@/components/themed-text';
-import { BottomTabInset, DarkTheme, MaxContentWidth, Spacing } from '@/constants/theme';
-
-const DUMMY = {
-  exerciseMinutes: [30, 45, 20, 60, 35, 50, 40],
-  caloriesBurned: [200, 320, 150, 420, 280, 350, 310],
-  weight: [72.5, 72.3, 72.4, 72.1, 72.0, 71.8, 71.9],
-};
+import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { addDays, todayString } from '@/lib/date';
+import { computeDailyMetrics } from '@/lib/dashboard-metrics';
+import { fetchVolume } from '@/lib/stats-api';
+import { fetchRoutinesByDate } from '@/lib/workout-api';
+import { useStatsStore } from '@/stores/stats-store';
+import type { VolumeData, WorkoutRoutine } from '@/types/workout';
 
 export default function HomeScreen() {
-  const { width } = useWindowDimensions();
-  const chartWidth = Math.min(width - Spacing.four * 2 - Spacing.three * 2, MaxContentWidth - Spacing.three * 2);
+  const { volumeData, loadStats, isLoading } = useStatsStore();
+  const [todayRoutines, setTodayRoutines] = useState<WorkoutRoutine[]>([]);
+  const [lastWeek, setLastWeek] = useState<VolumeData[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const today = todayString();
+      fetchRoutinesByDate(today)
+        .then(setTodayRoutines)
+        .catch(() => setTodayRoutines([]));
+      loadStats();
+      const lwEnd = addDays(today, -7);
+      const lwStart = addDays(today, -13);
+      fetchVolume(lwStart, lwEnd)
+        .then(setLastWeek)
+        .catch(() => setLastWeek([]));
+    }, [loadStats]),
+  );
+
+  const metrics = useMemo(() => computeDailyMetrics(todayRoutines), [todayRoutines]);
+  const hasRoutine = todayRoutines.some((r) => r.exercises.length > 0);
 
   return (
     <GradientBackground>
       <ScrollView
         style={{ backgroundColor: 'transparent' }}
-        contentContainerStyle={styles.scroll}>
-        <SafeAreaView style={styles.safeArea}>
-          <View style={styles.header}>
-            <ThemedText type="title">오늘의 건강</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              최근 7일간의 기록입니다
-            </ThemedText>
-          </View>
-
-          <View style={styles.cards}>
-            <DashboardCard title="운동 시간" value="40" unit="분">
-              <MiniChart data={DUMMY.exerciseMinutes} color={DarkTheme.statusSuccess} width={chartWidth} />
-            </DashboardCard>
-
-            <DashboardCard title="칼로리 소모" value="310" unit="kcal">
-              <MiniChart data={DUMMY.caloriesBurned} color={DarkTheme.statusWarning} width={chartWidth} />
-            </DashboardCard>
-
-            <DashboardCard title="체중" value="71.9" unit="kg">
-              <MiniChart data={DUMMY.weight} color={DarkTheme.accentCyan} width={chartWidth} />
-            </DashboardCard>
+        contentContainerStyle={styles.scroll}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+      >
+        <SafeAreaView style={styles.safe} edges={['top']}>
+          <View style={styles.content}>
+            <HeroSection hasRoutine={hasRoutine} />
+            <KpiRow metrics={hasRoutine ? metrics : null} />
+            <WeeklyVolumeCard thisWeek={volumeData} lastWeek={lastWeek} isLoading={isLoading} />
+            <QuickActions hasRoutine={hasRoutine} />
           </View>
         </SafeAreaView>
       </ScrollView>
@@ -55,18 +65,13 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
   },
-  safeArea: {
+  safe: {
     width: '100%',
     maxWidth: MaxContentWidth,
+  },
+  content: {
     paddingHorizontal: Spacing.four,
     paddingBottom: BottomTabInset + Spacing.four,
-  },
-  header: {
-    paddingTop: Spacing.four,
-    paddingBottom: Spacing.three,
-    gap: Spacing.one,
-  },
-  cards: {
-    gap: Spacing.three,
+    gap: Spacing.four,
   },
 });
