@@ -1,0 +1,9 @@
+appId: com.x031pjs.jealthapp
+name: "Tap Metro Server"
+---
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn: "http://10.0.2.2:8081"
+- waitForAnimationToEnd:
+    timeout: 60000

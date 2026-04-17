@@ -3,7 +3,9 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DarkTheme, Fonts } from '@/constants/theme';
+import { todayString } from '@/lib/date';
 import { haptic } from '@/lib/haptics';
+import { useWorkoutStore } from '@/stores/workout-store';
 
 export interface QuickActionsProps {
   hasRoutine: boolean;
@@ -11,16 +13,19 @@ export interface QuickActionsProps {
 
 export function QuickActions({ hasRoutine }: QuickActionsProps) {
   const router = useRouter();
+  const setDate = useWorkoutStore((s) => s.setDate);
 
-  const primaryLabel = hasRoutine ? "Continue Today's Workout" : "Start Today's Workout";
+  const primaryLabel = hasRoutine ? '오늘 운동 이어하기' : '오늘 운동 기록하기';
 
   const onPrimary = () => {
     haptic.medium();
+    setDate(todayString());
     router.push('/(tabs)/record');
   };
 
   const onSecondary = () => {
     haptic.light();
+    setDate(todayString());
     router.push('/(tabs)/record?copyOnOpen=1');
   };
 
@@ -42,9 +47,9 @@ export function QuickActions({ hasRoutine }: QuickActionsProps) {
         onPress={onSecondary}
         style={({ pressed }) => [styles.secondary, pressed && { opacity: 0.8 }]}
         accessibilityRole="button"
-        accessibilityLabel="Copy Recent Routine"
+        accessibilityLabel="이전 루틴 복사"
       >
-        <Text style={styles.secondaryText}>Copy Recent Routine</Text>
+        <Text style={styles.secondaryText}>이전 루틴 복사</Text>
       </Pressable>
     </View>
   );

@@ -1,0 +1,10 @@
+appId: com.x031pjs.jealthapp
+name: "Connect to Metro"
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn: "Fetch development servers"
+- waitForAnimationToEnd:
+    timeout: 15000
