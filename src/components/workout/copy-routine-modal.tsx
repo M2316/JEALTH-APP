@@ -52,7 +52,7 @@ export function CopyRoutineModal({ visible, onClose, onCopy }: Props) {
     const loadRecent = async () => {
       const results: DateRoutine[] = [];
       const today = new Date();
-      for (let i = 1; i <= 14; i++) {
+      for (let i = 0; i <= 14; i++) {
         const d = new Date(today);
         d.setDate(d.getDate() - i);
         const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

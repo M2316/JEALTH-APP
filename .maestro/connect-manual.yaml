@@ -1,0 +1,12 @@
+appId: com.x031pjs.jealthapp
+name: "Manual Metro Connect"
+---
+- launchApp
+- waitForAnimationToEnd:
+    timeout: 5000
+- tapOn:
+    text: "exp://"
+- inputText: "http://localhost:8081"
+- tapOn: "Connect"
+- waitForAnimationToEnd:
+    timeout: 30000

@@ -10,7 +10,7 @@ name: "탭 네비게이션"
 - runFlow: login_flow.yaml
 
 # 홈 탭 확인
-- assertVisible: "오늘의 건강"
+- assertVisible: "Today's Session"
 
 # 기록 탭 이동
 - tapOn: "기록"
@@ -26,4 +26,4 @@ name: "탭 네비게이션"
 
 # 다시 홈으로
 - tapOn: "홈"
-- assertVisible: "오늘의 건강"
+- assertVisible: "Today's Session"
