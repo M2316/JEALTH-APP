@@ -1,0 +1,47 @@
+appId: com.x031pjs.jealthapp
+name: "채팅 메시지 리스트 스크롤"
+---
+- launchApp
+
+- waitForAnimationToEnd:
+    timeout: 15000
+
+- runFlow: login_flow.yaml
+
+- tapOn: "기록"
+- waitForAnimationToEnd
+
+- tapOn: "💬 채팅 모드"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible:
+      id: "chat-input"
+    timeout: 10000
+
+# 시트 열린 직후 (리스트 하단)
+- takeScreenshot: scroll-1-initial
+
+# 위로 스와이프 = 리스트 상단(과거 메시지) 으로 이동
+- swipe:
+    start: 50%, 80%
+    end: 50%, 30%
+    duration: 600
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: scroll-2-after-swipe-up
+
+# 다시 아래로 스와이프 = 리스트 하단(최신) 으로 이동
+- swipe:
+    start: 50%, 30%
+    end: 50%, 80%
+    duration: 600
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: scroll-3-after-swipe-down
+
+# 시트가 여전히 열려 있는지 확인 — 닫히면 안됨
+- assertVisible:
+    id: "chat-input"
+- assertVisible:
+    id: "chat-close-btn"

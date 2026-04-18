@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { ToastHost } from '@/components/ui/toast';
@@ -53,12 +54,14 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={NavigationDark}>
-        <StatusBar style="light" />
-        <AnimatedSplashOverlay />
-        <Slot />
-        <ToastHost />
-      </ThemeProvider>
+      <BottomSheetModalProvider>
+        <ThemeProvider value={NavigationDark}>
+          <StatusBar style="light" />
+          <AnimatedSplashOverlay />
+          <Slot />
+          <ToastHost />
+        </ThemeProvider>
+      </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 }
