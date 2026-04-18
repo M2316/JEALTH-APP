@@ -49,6 +49,5 @@ export function ChatMessageList({ messages, saving, onApprove, onRetry, lowConfi
 
 const styles = StyleSheet.create({
   list: { flex: 1 },
-  // bottom 여백: footer (입력 bar) 뒤로 메시지가 가리지 않도록 — 입력 bar height ~64 + padding 24 + safe area 여유
-  content: { paddingVertical: 12, paddingBottom: 110, gap: 4 },
+  content: { paddingVertical: 12, gap: 4 },
 });

@@ -9,7 +9,7 @@ import {
   discardPendingForDate,
 } from '@/lib/chat-db';
 import { sendChatWorkout } from '@/lib/chat-api';
-import { createRoutine } from '@/lib/workout-api';
+import { createRoutine, updateRoutine } from '@/lib/workout-api';
 import { useWorkoutStore } from '@/stores/workout-store';
 import type {
   AssistantDraft,
@@ -156,16 +156,61 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const msg = get().messages.find((m) => m.id === messageId);
     if (!msg || !msg.draft) return;
 
-    const payload = draftToPayload(date, msg.draft);
-    const routine = await createRoutine(payload);
-    const routineId = routine?.id ?? '';
+    // 해당 날짜에 이미 routine 이 있으면 거기에 운동을 추가(append)하고,
+    // 없으면 새 routine 생성. 덮어쓰기 방지.
+    const workoutState = useWorkoutStore.getState();
+    const existingForDate = workoutState.routines.find(
+      (r) => r.date === date && r.id,
+    );
+
+    let routine;
+    let routineId: string;
+
+    if (existingForDate && existingForDate.id) {
+      // 기존 routine 의 exercises 에 draft 의 exercises 를 append
+      const existingExercises = existingForDate.exercises ?? [];
+      const baseOrder = existingExercises.length;
+      const newExercises = msg.draft.exercises.map((ex, idx) => ({
+        exerciseId: ex.exerciseId,
+        order: baseOrder + idx,
+        sets: ex.sets.map((s) => ({
+          reps: s.reps,
+          weight: s.weight,
+          weightUnit: s.weightUnit,
+        })),
+      }));
+      const mergedExercises = [
+        ...existingExercises.map((ex, idx) => ({
+          exerciseId: ex.exercise?.id ?? '',
+          order: idx,
+          sets: (ex.sets ?? []).map((s) => ({
+            reps: s.reps,
+            weight: s.weight,
+            weightUnit: s.weightUnit,
+          })),
+        })),
+        ...newExercises,
+      ];
+      routine = await updateRoutine(existingForDate.id, {
+        date,
+        exercises: mergedExercises,
+      });
+      routineId = routine?.id ?? existingForDate.id;
+    } else {
+      const payload = draftToPayload(date, msg.draft);
+      routine = await createRoutine(payload);
+      routineId = routine?.id ?? '';
+    }
 
     await updateMessageStatus(messageId, 'saved', routineId);
 
     try {
-      const workoutState = useWorkoutStore.getState();
       if (workoutState.selectedDate === date) {
-        useWorkoutStore.setState({ routines: [...workoutState.routines, routine] });
+        // 해당 date 의 routine 을 방금 받은 서버 응답으로 교체 (동일 id)
+        const updatedRoutines = existingForDate
+          ? workoutState.routines.map((r) => (r.id === routine?.id ? routine : r))
+          : [...workoutState.routines, routine];
+        useWorkoutStore.setState({ routines: updatedRoutines });
       }
     } catch {
       // ignore store sync errors in tests

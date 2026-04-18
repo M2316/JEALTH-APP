@@ -589,6 +589,16 @@ export default function RecordScreen() {
             </Pressable>
             <GlassSurface bordered borderRadius={22} style={styles.secondaryBtnGlass}>
               <Pressable
+                onPress={() => { haptic.medium(); setChatVisible(true); }}
+                style={({ pressed }) => [
+                  styles.secondaryBtn,
+                  pressed && { opacity: 0.8 },
+                ]}>
+                <Text style={styles.secondaryBtnText}>💬 채팅 모드</Text>
+              </Pressable>
+            </GlassSurface>
+            <GlassSurface bordered borderRadius={22} style={styles.secondaryBtnGlass}>
+              <Pressable
                 onPress={() => { haptic.light(); setCopyVisible(true); }}
                 style={({ pressed }) => [
                   styles.secondaryBtn,
