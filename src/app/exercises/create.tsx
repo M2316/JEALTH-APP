@@ -3,13 +3,13 @@ import {
   View,
   TextInput,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -119,7 +119,7 @@ export default function CreateExerciseScreen() {
           <View style={{ width: 48 }} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.form}>
+        <KeyboardAwareScrollView contentContainerStyle={styles.form} bottomOffset={24}>
           <View style={styles.field}>
             <Text style={styles.label}>운동 이름 *</Text>
             <TextInput
@@ -200,7 +200,7 @@ export default function CreateExerciseScreen() {
               <Text style={styles.submitText}>등록하기</Text>
             )}
           </Pressable>
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </SafeAreaView>
     </GradientBackground>
   );

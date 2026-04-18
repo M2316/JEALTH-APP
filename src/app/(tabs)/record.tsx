@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
-  ScrollView,
   Pressable,
   StyleSheet,
   Text,
@@ -9,6 +8,7 @@ import {
   Alert,
   useWindowDimensions,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useSharedValue,
@@ -518,10 +518,11 @@ export default function RecordScreen() {
               <ActivityIndicator color={DarkTheme.accentCyan} />
             </View>
           ) : hasExercises ? (
-            <ScrollView
+            <KeyboardAwareScrollView
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled">
+              keyboardShouldPersistTaps="handled"
+              bottomOffset={24}>
               {localExercises.map((we) => (
                 <WorkoutExerciseCard
                   key={`${routineId}-${we.order}`}
@@ -533,7 +534,7 @@ export default function RecordScreen() {
                 />
               ))}
               <View style={{ height: 120 }} />
-            </ScrollView>
+            </KeyboardAwareScrollView>
           ) : (
             <View style={styles.center}>
               <Text style={styles.emptyIcon}>🏋️</Text>
