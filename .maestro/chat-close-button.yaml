@@ -1,0 +1,40 @@
+appId: com.x031pjs.jealthapp
+name: "채팅 sheet X 버튼 닫기"
+---
+- launchApp
+
+- waitForAnimationToEnd:
+    timeout: 15000
+
+- runFlow: login_flow.yaml
+
+- tapOn: "기록"
+- waitForAnimationToEnd
+
+- tapOn: "💬 채팅 모드"
+- waitForAnimationToEnd
+
+# Sheet 열림 확인
+- extendedWaitUntil:
+    visible:
+      id: "chat-input"
+    timeout: 10000
+
+# X 버튼 가시 확인
+- assertVisible:
+    id: "chat-close-btn"
+
+- takeScreenshot: chat-sheet-open
+
+# X 버튼 탭으로 닫기
+- tapOn:
+    id: "chat-close-btn"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Sheet 닫힘 확인 (chat-input 사라짐, 기록 화면 복귀)
+- assertNotVisible:
+    id: "chat-input"
+- assertVisible: "기록"
+
+- takeScreenshot: chat-sheet-closed
