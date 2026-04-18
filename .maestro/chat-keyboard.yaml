@@ -1,0 +1,37 @@
+appId: com.x031pjs.jealthapp
+name: "채팅 입력창 키보드 오버랩"
+---
+- launchApp
+
+- waitForAnimationToEnd:
+    timeout: 15000
+
+- runFlow: login_flow.yaml
+
+- tapOn: "기록"
+- waitForAnimationToEnd
+
+- tapOn: "💬 채팅 모드"
+- waitForAnimationToEnd
+
+- extendedWaitUntil:
+    visible:
+      id: "chat-input"
+    timeout: 10000
+
+# 키보드 닫힌 상태
+- takeScreenshot: kbd-1-closed
+
+# 입력창 탭 → 키보드 올라옴
+- tapOn:
+    id: "chat-input"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# 키보드 올라온 상태 — 입력창이 키보드 위로 올라와야 함
+- takeScreenshot: kbd-2-open
+
+# 입력창 + 전송 버튼이 여전히 보여야 함
+- assertVisible:
+    id: "chat-input"
+- assertVisible: "전송"

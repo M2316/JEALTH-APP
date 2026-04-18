@@ -1,0 +1,50 @@
+appId: com.x031pjs.jealthapp
+name: "채팅 운동 기록 플로우"
+---
+- launchApp
+
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# 로그인 안 되어 있으면 로그인
+- runFlow: login_flow.yaml
+
+# 기록 탭으로 이동
+- tapOn: "기록"
+- waitForAnimationToEnd
+
+# FAB 버튼 클릭 (+ 운동 추가 선택 화면 진입)
+- tapOn:
+    id: "fab-button"
+- waitForAnimationToEnd
+
+# 채팅 모드 선택
+- assertVisible: "💬 채팅 모드"
+- tapOn: "💬 채팅 모드"
+- waitForAnimationToEnd
+
+# 채팅 화면 진입 확인 (BottomSheet 애니메이션 + accessibility tree 갱신 대기)
+- extendedWaitUntil:
+    visible:
+      id: "chat-input"
+    timeout: 10000
+
+# 전송 버튼 노출 확인
+- assertVisible: "전송"
+
+# Empty state title 확인
+- assertVisible:
+    text: ".*자연어로 말씀해 주세요.*"
+
+# 입력 필드 탭으로 키보드 활성화 확인
+- tapOn:
+    id: "chat-input"
+
+# 채팅 sheet 닫기
+- back
+
+# 기록 화면 복귀 확인
+- assertVisible: "기록"
+
+# NOTE: 한글 입력 이후 단계 (AI 호출, 저장)는 Maestro Android Unicode 미지원으로 자동화 불가.
+#       수동 테스트로 검증하거나 iOS Maestro 또는 Detox 사용.

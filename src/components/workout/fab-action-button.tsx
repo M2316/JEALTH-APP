@@ -15,6 +15,7 @@ import { haptic } from '@/lib/haptics';
 interface FABActionButtonProps {
   onAddExercise: () => void;
   onCopyRoutine: () => void;
+  onOpenChat: () => void;
   hidden?: boolean;
 }
 
@@ -25,6 +26,7 @@ const DURATION = 120;
 export function FABActionButton({
   onAddExercise,
   onCopyRoutine,
+  onOpenChat,
   hidden = false,
 }: FABActionButtonProps) {
   const insets = useSafeAreaInsets();
@@ -87,6 +89,12 @@ export function FABActionButton({
     close();
   };
 
+  const handleOpenChat = () => {
+    haptic.medium();
+    onOpenChat();
+    close();
+  };
+
   return (
     <>
       {/* Backdrop */}
@@ -105,9 +113,9 @@ export function FABActionButton({
       >
         {/* Menu items */}
         <Animated.View style={[styles.menuContainer, menuStyle]}>
-          <Pressable onPress={handleCopyRoutine}>
+          <Pressable onPress={handleOpenChat}>
             <GlassSurface bordered borderRadius={12} style={styles.menuItem}>
-              <Text style={styles.menuText}>이전 루틴 복사</Text>
+              <Text style={styles.menuText}>💬 채팅 모드</Text>
             </GlassSurface>
           </Pressable>
 
@@ -116,10 +124,16 @@ export function FABActionButton({
               <Text style={styles.menuText}>운동 추가</Text>
             </GlassSurface>
           </Pressable>
+
+          <Pressable onPress={handleCopyRoutine}>
+            <GlassSurface bordered borderRadius={12} style={styles.menuItem}>
+              <Text style={styles.menuText}>이전 루틴 복사</Text>
+            </GlassSurface>
+          </Pressable>
         </Animated.View>
 
         {/* FAB button */}
-        <Pressable onPress={toggle} style={styles.fab}>
+        <Pressable onPress={toggle} style={styles.fab} testID="fab-button">
           <Animated.Text style={[styles.fabIcon, iconStyle]}>+</Animated.Text>
         </Pressable>
       </Animated.View>
