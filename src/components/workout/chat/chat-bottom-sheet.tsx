@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import { DarkTheme } from '@/constants/theme';
 import { useChatStore } from '@/stores/chat-store';
 import { ChatMessageList } from './chat-message-list';
@@ -17,6 +19,14 @@ interface Props {
 export function ChatBottomSheet({ visible, date, onClose }: Props) {
   const sheetRef = useRef<BottomSheetModal>(null);
   const insets = useSafeAreaInsets();
+  const { height: keyboardHeight, progress } = useReanimatedKeyboardAnimation();
+  const bodyStyle = useAnimatedStyle(() => ({
+    paddingBottom: -keyboardHeight.value,
+  }));
+  const inputWrapStyle = useAnimatedStyle(() => ({
+    paddingBottom: insets.bottom * (1 - progress.value),
+    marginBottom: -12 * progress.value,
+  }));
   const {
     messages,
     isSending,
@@ -92,11 +102,10 @@ export function ChatBottomSheet({ visible, date, onClose }: Props) {
       onDismiss={handleDismiss}
       backgroundStyle={styles.background}
       handleComponent={renderHandle}
-      keyboardBehavior="interactive"
+      keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
-      android_keyboardInputMode="adjustResize"
     >
-      <View style={styles.body}>
+      <Animated.View style={[styles.body, bodyStyle]}>
         <View style={styles.listArea}>
           {messages.length === 0 ? (
             <ChatEmptyState />
@@ -111,10 +120,10 @@ export function ChatBottomSheet({ visible, date, onClose }: Props) {
             />
           )}
         </View>
-        <View style={[styles.inputWrap, { paddingBottom: insets.bottom }]}>
+        <Animated.View style={[styles.inputWrap, inputWrapStyle]}>
           <ChatInput disabled={false} sending={isSending} onSend={(t) => sendMessage(t)} />
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </BottomSheetModal>
   );
 }

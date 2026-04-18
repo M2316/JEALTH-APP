@@ -36,9 +36,9 @@ export function ChatInput({ disabled, sending, onSend }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, padding: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#222' },
-  input: { flex: 1, minHeight: 40, maxHeight: 120, color: DarkTheme.textPrimary, backgroundColor: '#1a1a1a', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14 },
-  sendButton: { backgroundColor: DarkTheme.accentCyan, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10, minWidth: 64, alignItems: 'center', justifyContent: 'center' },
+  container: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#222' },
+  input: { flex: 1, minHeight: 40, maxHeight: 120, marginTop: 12, color: DarkTheme.textPrimary, backgroundColor: '#1a1a1a', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14 },
+  sendButton: { backgroundColor: DarkTheme.accentCyan, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10, minWidth: 64, alignSelf: 'center', alignItems: 'center', justifyContent: 'center' },
   sendDisabled: { opacity: 0.4 },
   sendText: { color: DarkTheme.bgPrimary, fontWeight: '700' },
 });

@@ -1,6 +1,7 @@
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import { GradientBackground } from '@/components/gradient-background';
 import { GlassSurface } from '@/components/glass-surface';
