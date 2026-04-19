@@ -22,6 +22,7 @@ describe('chat-store', () => {
       reply: '맞나요?',
       confidence: 'high',
       parseSuccess: true,
+      kind: 'existing',
       draft: {
         exercises: [{
           exerciseId: 'ex-1', name: '벤치프레스',
@@ -43,6 +44,7 @@ describe('chat-store', () => {
       reply: '맞나요?',
       confidence: 'high',
       parseSuccess: true,
+      kind: 'existing',
       draft: {
         exercises: [{
           exerciseId: 'ex-1', name: 'x',
@@ -68,5 +70,32 @@ describe('chat-store', () => {
     const last = useChatStore.getState().messages.at(-1)!;
     expect(last.role).toBe('assistant');
     expect(last.status).toBe('error');
+  });
+
+  it('sendMessage persists kind, muscleGroups, suggestedMuscleGroupIds', async () => {
+    sendMock.mockResolvedValue({
+      reply: '스쿼트는 새 운동입니다...',
+      confidence: 'high',
+      parseSuccess: false,
+      kind: 'new_exercise',
+      draft: {
+        exercises: [{
+          exerciseId: '', name: '스쿼트',
+          sets: [{ round: 1, reps: 10, weight: 100, weightUnit: 'kg' }],
+        }],
+      },
+      suggestedMuscleGroupIds: ['mg-leg', 'mg-quad'],
+      muscleGroups: [
+        { id: 'mg-leg', name: '하체' },
+        { id: 'mg-quad', name: '대퇴사두' },
+        { id: 'mg-chest', name: '가슴' },
+      ],
+    });
+    await useChatStore.getState().openForDate('2026-04-19');
+    await useChatStore.getState().sendMessage('스쿼트 100kg 10개');
+    const assistant = useChatStore.getState().messages.find((m) => m.role === 'assistant')!;
+    expect(assistant.kind).toBe('new_exercise');
+    expect(assistant.suggestedMuscleGroupIds).toEqual(['mg-leg', 'mg-quad']);
+    expect(assistant.muscleGroups).toHaveLength(3);
   });
 });

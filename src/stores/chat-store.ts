@@ -93,6 +93,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const res = await sendChatWorkout({ date, messages: context });
 
       const assistantNow = Date.now();
+      const isNewExerciseKind = res.kind === 'new_exercise';
       const assistantId = await insertMessage({
         date,
         role: 'assistant',
@@ -100,6 +101,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         draft: res.draft,
         status: 'pending',
         createdAt: assistantNow,
+        kind: res.kind,
+        muscleGroups: isNewExerciseKind ? res.muscleGroups : undefined,
+        suggestedMuscleGroupIds: isNewExerciseKind ? res.suggestedMuscleGroupIds : undefined,
       });
       const assistantMessage: ChatMessage = {
         id: assistantId,
@@ -109,6 +113,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
         draft: res.draft,
         status: 'pending',
         createdAt: assistantNow,
+        kind: res.kind,
+        muscleGroups: isNewExerciseKind ? res.muscleGroups : undefined,
+        suggestedMuscleGroupIds: isNewExerciseKind ? res.suggestedMuscleGroupIds : undefined,
       };
       set((s) => ({
         messages: [...s.messages, assistantMessage],
