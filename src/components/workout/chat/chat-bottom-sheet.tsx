@@ -36,6 +36,8 @@ export function ChatBottomSheet({ visible, date, onClose }: Props) {
     sendMessage,
     approveDraft,
     retryFromError,
+    approveNewExercise,
+    rejectNewExercise,
     closeAndCleanup,
   } = useChatStore();
   const snapPoints = useMemo(() => ['90%'], []);
@@ -115,6 +117,8 @@ export function ChatBottomSheet({ visible, date, onClose }: Props) {
               saving={isSending}
               onApprove={(id) => approveDraft(id)}
               onRetry={(id) => retryFromError(id)}
+              onApproveNewExercise={(id, input) => approveNewExercise(id, input)}
+              onRejectNewExercise={(id) => rejectNewExercise(id)}
               lowConfidenceIds={lowConfidenceIds}
               parseSuccessByMsgId={parseSuccessByMsgId}
             />

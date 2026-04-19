@@ -49,3 +49,78 @@ describe('chat-db', () => {
     expect(ctx.map((m) => m.content)).toEqual(['c']);
   });
 });
+
+describe('chat-db v2 migration', () => {
+  it('stores and reads back kind, suggestedMuscleGroupIds, muscleGroups', async () => {
+    await initChatDb();
+    const id = await insertMessage({
+      date: '2026-04-19',
+      role: 'assistant',
+      content: '스쿼트 신규 추가할까요?',
+      draft: {
+        exercises: [
+          {
+            exerciseId: '',
+            name: '스쿼트',
+            sets: [{ round: 1, reps: 10, weight: 100, weightUnit: 'kg' }],
+          },
+        ],
+      },
+      status: 'pending',
+      createdAt: 1,
+      kind: 'new_exercise',
+      suggestedMuscleGroupIds: ['mg-leg', 'mg-quad'],
+      muscleGroups: [
+        { id: 'mg-leg', name: '하체' },
+        { id: 'mg-quad', name: '대퇴사두' },
+      ],
+    });
+    expect(id).toBeGreaterThan(0);
+    const msgs = await loadMessagesForDate('2026-04-19');
+    expect(msgs[0].kind).toBe('new_exercise');
+    expect(msgs[0].suggestedMuscleGroupIds).toEqual(['mg-leg', 'mg-quad']);
+    expect(msgs[0].muscleGroups).toEqual([
+      { id: 'mg-leg', name: '하체' },
+      { id: 'mg-quad', name: '대퇴사두' },
+    ]);
+  });
+
+  it('loads legacy rows with null kind as undefined (not "existing")', async () => {
+    await initChatDb();
+    await insertMessage({
+      date: '2026-04-19', role: 'assistant', content: 'x',
+      status: 'saved', createdAt: 1,
+    });
+    const [msg] = await loadMessagesForDate('2026-04-19');
+    expect(msg.kind).toBeUndefined();
+  });
+
+  it('v3: stores and reads back originalName and suggestedEquipment', async () => {
+    await initChatDb();
+    const id = await insertMessage({
+      date: '2026-04-19',
+      role: 'assistant',
+      content: '푸귀업 vs 푸쉬업?',
+      status: 'pending',
+      createdAt: 1,
+      kind: 'new_exercise',
+      originalName: '푸귀업',
+      suggestedEquipment: '맨몸',
+    });
+    expect(id).toBeGreaterThan(0);
+    const [msg] = await loadMessagesForDate('2026-04-19');
+    expect(msg.originalName).toBe('푸귀업');
+    expect(msg.suggestedEquipment).toBe('맨몸');
+  });
+
+  it('v3: null columns map to undefined', async () => {
+    await initChatDb();
+    await insertMessage({
+      date: '2026-04-19', role: 'assistant', content: 'x',
+      status: 'saved', createdAt: 1,
+    });
+    const [msg] = await loadMessagesForDate('2026-04-19');
+    expect(msg.originalName).toBeUndefined();
+    expect(msg.suggestedEquipment).toBeUndefined();
+  });
+});

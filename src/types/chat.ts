@@ -2,6 +2,7 @@ import type { CreateRoutinePayload, WeightUnit } from './workout';
 
 export type ChatRole = 'user' | 'assistant';
 export type ChatStatus = 'pending' | 'saved' | 'discarded' | 'error';
+export type ChatDraftKind = 'existing' | 'new_exercise';
 
 export interface AssistantDraftSet {
   round: number;
@@ -20,6 +21,12 @@ export interface AssistantDraft {
   exercises: AssistantDraftExercise[];
 }
 
+export interface ChatMuscleGroup {
+  id: string;
+  name: string;
+  color?: string;
+}
+
 export interface ChatMessage {
   id: number;
   date: string;
@@ -29,18 +36,24 @@ export interface ChatMessage {
   status: ChatStatus;
   routineId?: string;
   createdAt: number;
+  kind?: ChatDraftKind;
+  muscleGroups?: ChatMuscleGroup[];
+  suggestedMuscleGroupIds?: string[];
+  editedMuscleGroupIds?: string[];
+  originalName?: string;
+  suggestedEquipment?: string;
 }
 
 export interface ChatWorkoutResponse {
   reply: string;
   confidence: 'high' | 'low';
-  /**
-   * AI 가 메시지를 운동 기록으로 정확히 파싱했는지 여부.
-   * true: 승인 버튼 노출. false: 승인 불가, 재입력 안내.
-   */
   parseSuccess: boolean;
+  kind: ChatDraftKind;
   draft: AssistantDraft;
-  candidates?: Array<{ id: string; name: string }>;
+  suggestedMuscleGroupIds?: string[];
+  muscleGroups?: ChatMuscleGroup[];
+  originalName?: string;
+  suggestedEquipment?: string;
 }
 
 export interface ChatWorkoutRequest {
@@ -48,4 +61,7 @@ export interface ChatWorkoutRequest {
   messages: Array<{ role: ChatRole; content: string }>;
 }
 
-export type DraftToRoutinePayload = (date: string, draft: AssistantDraft) => CreateRoutinePayload;
+export type DraftToRoutinePayload = (
+  date: string,
+  draft: AssistantDraft,
+) => CreateRoutinePayload;
