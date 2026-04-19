@@ -40,6 +40,8 @@ export interface ChatMessage {
   muscleGroups?: ChatMuscleGroup[];
   suggestedMuscleGroupIds?: string[];
   editedMuscleGroupIds?: string[];
+  originalName?: string;
+  suggestedEquipment?: string;
 }
 
 export interface ChatWorkoutResponse {
@@ -50,6 +52,8 @@ export interface ChatWorkoutResponse {
   draft: AssistantDraft;
   suggestedMuscleGroupIds?: string[];
   muscleGroups?: ChatMuscleGroup[];
+  originalName?: string;
+  suggestedEquipment?: string;
 }
 
 export interface ChatWorkoutRequest {

@@ -94,4 +94,33 @@ describe('chat-db v2 migration', () => {
     const [msg] = await loadMessagesForDate('2026-04-19');
     expect(msg.kind).toBeUndefined();
   });
+
+  it('v3: stores and reads back originalName and suggestedEquipment', async () => {
+    await initChatDb();
+    const id = await insertMessage({
+      date: '2026-04-19',
+      role: 'assistant',
+      content: '푸귀업 vs 푸쉬업?',
+      status: 'pending',
+      createdAt: 1,
+      kind: 'new_exercise',
+      originalName: '푸귀업',
+      suggestedEquipment: '맨몸',
+    });
+    expect(id).toBeGreaterThan(0);
+    const [msg] = await loadMessagesForDate('2026-04-19');
+    expect(msg.originalName).toBe('푸귀업');
+    expect(msg.suggestedEquipment).toBe('맨몸');
+  });
+
+  it('v3: null columns map to undefined', async () => {
+    await initChatDb();
+    await insertMessage({
+      date: '2026-04-19', role: 'assistant', content: 'x',
+      status: 'saved', createdAt: 1,
+    });
+    const [msg] = await loadMessagesForDate('2026-04-19');
+    expect(msg.originalName).toBeUndefined();
+    expect(msg.suggestedEquipment).toBeUndefined();
+  });
 });

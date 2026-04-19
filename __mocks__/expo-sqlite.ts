@@ -73,6 +73,13 @@ class FakeDb {
         row.suggested_muscle_group_ids_json = null;
         row.edited_muscle_group_ids_json = null;
       }
+      if (params.length >= 13) {
+        row.original_name = params[11];
+        row.suggested_equipment = params[12];
+      } else {
+        row.original_name = null;
+        row.suggested_equipment = null;
+      }
       this.rows.push(row);
       return { lastInsertRowId: id, changes: 1 };
     }

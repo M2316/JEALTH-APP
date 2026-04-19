@@ -108,6 +108,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         kind: res.kind,
         muscleGroups: isNewExerciseKind ? res.muscleGroups : undefined,
         suggestedMuscleGroupIds: isNewExerciseKind ? res.suggestedMuscleGroupIds : undefined,
+        originalName: isNewExerciseKind ? res.originalName : undefined,
+        suggestedEquipment: isNewExerciseKind ? res.suggestedEquipment : undefined,
       });
       const assistantMessage: ChatMessage = {
         id: assistantId,
@@ -120,6 +122,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         kind: res.kind,
         muscleGroups: isNewExerciseKind ? res.muscleGroups : undefined,
         suggestedMuscleGroupIds: isNewExerciseKind ? res.suggestedMuscleGroupIds : undefined,
+        originalName: isNewExerciseKind ? res.originalName : undefined,
+        suggestedEquipment: isNewExerciseKind ? res.suggestedEquipment : undefined,
       };
       set((s) => ({
         messages: [...s.messages, assistantMessage],

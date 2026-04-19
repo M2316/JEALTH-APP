@@ -173,6 +173,30 @@ describe('chat-store', () => {
     expect(stillPending.status).toBe('pending');
   });
 
+  it('sendMessage persists originalName and suggestedEquipment on new_exercise', async () => {
+    sendMock.mockResolvedValue({
+      reply: '푸쉬업 맞나요?',
+      confidence: 'high',
+      parseSuccess: false,
+      kind: 'new_exercise',
+      draft: {
+        exercises: [{
+          exerciseId: '', name: '푸쉬업',
+          sets: [{ round: 1, reps: 100, weight: 0, weightUnit: 'kg' }],
+        }],
+      },
+      suggestedMuscleGroupIds: ['mg-chest'],
+      muscleGroups: [{ id: 'mg-chest', name: '가슴' }],
+      originalName: '푸귀업',
+      suggestedEquipment: '맨몸',
+    });
+    await useChatStore.getState().openForDate('2026-04-19');
+    await useChatStore.getState().sendMessage('푸귀업 100개 0키로');
+    const assistant = useChatStore.getState().messages.find((m) => m.role === 'assistant')!;
+    expect(assistant.originalName).toBe('푸귀업');
+    expect(assistant.suggestedEquipment).toBe('맨몸');
+  });
+
   it('rejectNewExercise marks message discarded without server call', async () => {
     sendMock.mockResolvedValue({
       reply: '스쿼트 신규 추가할까요?',

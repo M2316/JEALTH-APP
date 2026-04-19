@@ -9,7 +9,7 @@ import type {
 } from '@/types/chat';
 
 const DB_NAME = 'jealth-chat.db';
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
@@ -40,7 +40,7 @@ export const initChatDb = async (): Promise<void> => {
   );
   const current = versionRow?.user_version ?? 0;
 
-  if (current < 2) {
+  if (current < 3) {
     const cols = await db.getAllAsync<{ name: string }>(
       `PRAGMA table_info(chat_messages)`,
     );
@@ -52,10 +52,14 @@ export const initChatDb = async (): Promise<void> => {
         );
       }
     };
+    // v2 columns
     await addCol('kind');
     await addCol('muscle_groups_json');
     await addCol('suggested_muscle_group_ids_json');
     await addCol('edited_muscle_group_ids_json');
+    // v3 columns
+    await addCol('original_name');
+    await addCol('suggested_equipment');
     await db.execAsync(`PRAGMA user_version = ${SCHEMA_VERSION}`);
   }
 };
@@ -72,6 +76,8 @@ export interface InsertMessageParams {
   muscleGroups?: ChatMuscleGroup[];
   suggestedMuscleGroupIds?: string[];
   editedMuscleGroupIds?: string[];
+  originalName?: string;
+  suggestedEquipment?: string;
 }
 
 export const insertMessage = async (p: InsertMessageParams): Promise<number> => {
@@ -79,8 +85,9 @@ export const insertMessage = async (p: InsertMessageParams): Promise<number> => 
   const result = await db.runAsync(
     `INSERT INTO chat_messages (
        date, role, content, draft_json, status, routine_id, created_at,
-       kind, muscle_groups_json, suggested_muscle_group_ids_json, edited_muscle_group_ids_json
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       kind, muscle_groups_json, suggested_muscle_group_ids_json, edited_muscle_group_ids_json,
+       original_name, suggested_equipment
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       p.date,
       p.role,
@@ -93,6 +100,8 @@ export const insertMessage = async (p: InsertMessageParams): Promise<number> => 
       p.muscleGroups ? JSON.stringify(p.muscleGroups) : null,
       p.suggestedMuscleGroupIds ? JSON.stringify(p.suggestedMuscleGroupIds) : null,
       p.editedMuscleGroupIds ? JSON.stringify(p.editedMuscleGroupIds) : null,
+      p.originalName ?? null,
+      p.suggestedEquipment ?? null,
     ],
   );
   return result.lastInsertRowId;
@@ -108,6 +117,8 @@ export const loadMessagesForDate = async (date: string): Promise<ChatMessage[]> 
     muscle_groups_json: string | null;
     suggested_muscle_group_ids_json: string | null;
     edited_muscle_group_ids_json: string | null;
+    original_name: string | null;
+    suggested_equipment: string | null;
   }>(
     `SELECT * FROM chat_messages WHERE date = ? ORDER BY created_at ASC`,
     [date],
@@ -127,6 +138,8 @@ export const loadMessagesForDate = async (date: string): Promise<ChatMessage[]> 
     muscleGroups: parseJson<ChatMuscleGroup[]>(r.muscle_groups_json),
     suggestedMuscleGroupIds: parseJson<string[]>(r.suggested_muscle_group_ids_json),
     editedMuscleGroupIds: parseJson<string[]>(r.edited_muscle_group_ids_json),
+    originalName: r.original_name ?? undefined,
+    suggestedEquipment: r.suggested_equipment ?? undefined,
   }));
 };
 
