@@ -1,14 +1,14 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { useAnimatedStyle } from 'react-native-reanimated';
-import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import { DarkTheme } from '@/constants/theme';
 import { useChatStore } from '@/stores/chat-store';
-import { ChatMessageList } from './chat-message-list';
-import { ChatInput } from './chat-input';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChatEmptyState } from './chat-empty-state';
+import { ChatInput } from './chat-input';
+import { ChatMessageList } from './chat-message-list';
 
 interface Props {
   visible: boolean;
@@ -19,13 +19,9 @@ interface Props {
 export function ChatBottomSheet({ visible, date, onClose }: Props) {
   const sheetRef = useRef<BottomSheetModal>(null);
   const insets = useSafeAreaInsets();
-  const { height: keyboardHeight, progress } = useReanimatedKeyboardAnimation();
-  const bodyStyle = useAnimatedStyle(() => ({
-    paddingBottom: -keyboardHeight.value,
-  }));
+  const { progress } = useReanimatedKeyboardAnimation();
   const inputWrapStyle = useAnimatedStyle(() => ({
-    paddingBottom: insets.bottom * (1 - progress.value),
-    marginBottom: -12 * progress.value,
+    paddingBottom: progress.value ? 0 : insets.bottom,
   }));
   const {
     messages,
@@ -107,7 +103,7 @@ export function ChatBottomSheet({ visible, date, onClose }: Props) {
       keyboardBehavior="extend"
       keyboardBlurBehavior="restore"
     >
-      <Animated.View style={[styles.body, bodyStyle]}>
+      <Animated.View style={[styles.body]}>
         <View style={styles.listArea}>
           {messages.length === 0 ? (
             <ChatEmptyState />
