@@ -8,11 +8,15 @@ jest.mock('@/lib/workout-api');
 
 const sendMock = chatApi.sendChatWorkout as jest.MockedFunction<typeof chatApi.sendChatWorkout>;
 const createRoutineMock = workoutApi.createRoutine as jest.MockedFunction<typeof workoutApi.createRoutine>;
+const approveNewExerciseMock = chatApi.approveNewExerciseApi as jest.MockedFunction<
+  typeof chatApi.approveNewExerciseApi
+>;
 
 beforeEach(() => {
   __resetMockDb();
   sendMock.mockReset();
   createRoutineMock.mockReset();
+  approveNewExerciseMock.mockReset();
   useChatStore.setState({ messages: [], isSending: false, currentDate: null, confidenceByMsgId: {} });
 });
 
@@ -97,5 +101,71 @@ describe('chat-store', () => {
     expect(assistant.kind).toBe('new_exercise');
     expect(assistant.suggestedMuscleGroupIds).toEqual(['mg-leg', 'mg-quad']);
     expect(assistant.muscleGroups).toHaveLength(3);
+  });
+
+  it('approveNewExercise calls API, updates stores, marks message saved', async () => {
+    sendMock.mockResolvedValue({
+      reply: '스쿼트 신규 추가할까요?',
+      confidence: 'high',
+      parseSuccess: false,
+      kind: 'new_exercise',
+      draft: {
+        exercises: [{
+          exerciseId: '', name: '스쿼트',
+          sets: [{ round: 1, reps: 10, weight: 100, weightUnit: 'kg' }],
+        }],
+      },
+      suggestedMuscleGroupIds: ['mg-leg'],
+      muscleGroups: [{ id: 'mg-leg', name: '하체' }],
+    });
+    approveNewExerciseMock.mockResolvedValue({
+      exercise: {
+        id: 'ex-new',
+        name: '스쿼트',
+        muscleGroups: [{ id: 'mg-leg', name: '하체', nameKo: '하체' }],
+      } as any,
+      routine: { id: 'r-new', date: '2026-04-19', order: 0, exercises: [] } as any,
+    });
+    await useChatStore.getState().openForDate('2026-04-19');
+    await useChatStore.getState().sendMessage('스쿼트 100 10');
+    const draftMsg = useChatStore.getState().messages.find((m) => m.role === 'assistant')!;
+    await useChatStore.getState().approveNewExercise(draftMsg.id, ['mg-leg']);
+    expect(approveNewExerciseMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        date: '2026-04-19',
+        name: '스쿼트',
+        muscleGroupIds: ['mg-leg'],
+        sets: [{ round: 1, reps: 10, weight: 100, weightUnit: 'kg' }],
+      }),
+    );
+    const updated = useChatStore.getState().messages.find((m) => m.id === draftMsg.id)!;
+    expect(updated.status).toBe('saved');
+    expect(updated.routineId).toBe('r-new');
+    expect(updated.draft?.exercises[0].exerciseId).toBe('ex-new');
+    expect(useChatStore.getState().messages.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('rejectNewExercise marks message discarded without server call', async () => {
+    sendMock.mockResolvedValue({
+      reply: '스쿼트 신규 추가할까요?',
+      confidence: 'high',
+      parseSuccess: false,
+      kind: 'new_exercise',
+      draft: {
+        exercises: [{
+          exerciseId: '', name: '스쿼트',
+          sets: [{ round: 1, reps: 10, weight: 100, weightUnit: 'kg' }],
+        }],
+      },
+      suggestedMuscleGroupIds: [],
+      muscleGroups: [],
+    });
+    await useChatStore.getState().openForDate('2026-04-19');
+    await useChatStore.getState().sendMessage('딱히 없는운동 50 5');
+    const msg = useChatStore.getState().messages.find((m) => m.role === 'assistant')!;
+    await useChatStore.getState().rejectNewExercise(msg.id);
+    const updated = useChatStore.getState().messages.find((m) => m.id === msg.id)!;
+    expect(updated.status).toBe('discarded');
+    expect(approveNewExerciseMock).not.toHaveBeenCalled();
   });
 });
