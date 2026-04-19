@@ -129,7 +129,10 @@ describe('chat-store', () => {
     await useChatStore.getState().openForDate('2026-04-19');
     await useChatStore.getState().sendMessage('스쿼트 100 10');
     const draftMsg = useChatStore.getState().messages.find((m) => m.role === 'assistant')!;
-    await useChatStore.getState().approveNewExercise(draftMsg.id, ['mg-leg']);
+    await useChatStore.getState().approveNewExercise(draftMsg.id, {
+      muscleGroupIds: ['mg-leg'],
+      name: '스쿼트',
+    });
     expect(approveNewExerciseMock).toHaveBeenCalledWith(
       expect.objectContaining({
         date: '2026-04-19',
@@ -143,6 +146,47 @@ describe('chat-store', () => {
     expect(updated.routineId).toBe('r-new');
     expect(updated.draft?.exercises[0].exerciseId).toBe('ex-new');
     expect(useChatStore.getState().messages.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('approveNewExercise forwards equipment and chosen name to API', async () => {
+    sendMock.mockResolvedValue({
+      reply: '푸쉬업 맞나요?',
+      confidence: 'high',
+      parseSuccess: false,
+      kind: 'new_exercise',
+      draft: {
+        exercises: [{
+          exerciseId: '', name: '푸쉬업',
+          sets: [{ round: 1, reps: 100, weight: 0, weightUnit: 'kg' }],
+        }],
+      },
+      suggestedMuscleGroupIds: ['mg-chest'],
+      muscleGroups: [{ id: 'mg-chest', name: '가슴' }],
+      originalName: '푸귀업',
+      suggestedEquipment: '맨몸',
+    });
+    approveNewExerciseMock.mockResolvedValue({
+      exercise: { id: 'ex-new', name: '푸귀업', muscleGroups: [] } as any,
+      routine: { id: 'r-new', date: '2026-04-19', order: 0, exercises: [] } as any,
+    });
+    await useChatStore.getState().openForDate('2026-04-19');
+    await useChatStore.getState().sendMessage('푸귀업 100개 0키로');
+    const draftMsg = useChatStore.getState().messages.find((m) => m.role === 'assistant')!;
+    await useChatStore.getState().approveNewExercise(draftMsg.id, {
+      muscleGroupIds: ['mg-chest'],
+      equipment: '맨몸',
+      name: '푸귀업',
+    });
+    expect(approveNewExerciseMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: '푸귀업',
+        muscleGroupIds: ['mg-chest'],
+        equipment: '맨몸',
+      }),
+    );
+    const updated = useChatStore.getState().messages.find((m) => m.id === draftMsg.id)!;
+    expect(updated.draft?.exercises[0].name).toBe('푸귀업');
+    expect(updated.draft?.exercises[0].exerciseId).toBe('ex-new');
   });
 
   it('approveNewExercise inserts error message on API failure, leaves original pending', async () => {
@@ -164,7 +208,10 @@ describe('chat-store', () => {
     await useChatStore.getState().openForDate('2026-04-19');
     await useChatStore.getState().sendMessage('스쿼트 100 10');
     const draftMsg = useChatStore.getState().messages.find((m) => m.role === 'assistant')!;
-    await useChatStore.getState().approveNewExercise(draftMsg.id, ['mg-leg']);
+    await useChatStore.getState().approveNewExercise(draftMsg.id, {
+      muscleGroupIds: ['mg-leg'],
+      name: '스쿼트',
+    });
     const latest = useChatStore.getState().messages;
     const errorMsg = latest[latest.length - 1];
     expect(errorMsg.status).toBe('error');

@@ -29,7 +29,10 @@ interface ChatState {
   openForDate: (date: string) => Promise<void>;
   sendMessage: (text: string) => Promise<void>;
   approveDraft: (messageId: number) => Promise<void>;
-  approveNewExercise: (messageId: number, muscleGroupIds: string[]) => Promise<void>;
+  approveNewExercise: (
+    messageId: number,
+    input: { muscleGroupIds: string[]; equipment?: string; name: string },
+  ) => Promise<void>;
   rejectNewExercise: (messageId: number) => Promise<void>;
   retryFromError: (errorMessageId: number) => Promise<void>;
   closeAndCleanup: () => Promise<void>;
@@ -280,7 +283,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     await get().sendMessage(userMsg.content);
   },
 
-  approveNewExercise: async (messageId, muscleGroupIds) => {
+  approveNewExercise: async (messageId, input) => {
     const state = get();
     const date = state.currentDate;
     if (!date) return;
@@ -292,8 +295,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       const res = await approveNewExerciseApi({
         date,
-        name: draftExercise.name,
-        muscleGroupIds,
+        name: input.name,
+        muscleGroupIds: input.muscleGroupIds,
+        equipment: input.equipment,
         sets: draftExercise.sets.map((s) => ({
           round: s.round,
           reps: s.reps,
@@ -335,7 +339,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       // 메시지 draft.exerciseId 를 실제 id 로 patch (DB + 메모리)
       const patchedDraft: AssistantDraft = {
         exercises: msg.draft.exercises.map((e, i) =>
-          i === 0 ? { ...e, exerciseId: res.exercise.id } : e,
+          i === 0 ? { ...e, exerciseId: res.exercise.id, name: input.name } : e,
         ),
       };
       await updateMessageDraft(messageId, patchedDraft);

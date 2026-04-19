@@ -11,7 +11,10 @@ interface Props {
   saving: boolean;
   onApprove: (messageId: number) => void;
   onRetry: (messageId: number) => void;
-  onApproveNewExercise: (messageId: number, muscleGroupIds: string[]) => void;
+  onApproveNewExercise: (
+    messageId: number,
+    input: { muscleGroupIds: string[]; equipment?: string; name: string },
+  ) => void;
   onRejectNewExercise: (messageId: number) => void;
   lowConfidenceIds: Set<number>;
   parseSuccessByMsgId: Record<number, boolean>;
@@ -30,7 +33,7 @@ export function ChatMessageList({
           <ChatNewExerciseCard
             message={item}
             saving={saving}
-            onApprove={(ids) => onApproveNewExercise(item.id, ids)}
+            onApprove={(input) => onApproveNewExercise(item.id, input)}
             onReject={() => onRejectNewExercise(item.id)}
           />
         ) : item.role === 'assistant' && item.draft ? (

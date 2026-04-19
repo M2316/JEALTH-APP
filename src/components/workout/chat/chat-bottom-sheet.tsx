@@ -117,7 +117,7 @@ export function ChatBottomSheet({ visible, date, onClose }: Props) {
               saving={isSending}
               onApprove={(id) => approveDraft(id)}
               onRetry={(id) => retryFromError(id)}
-              onApproveNewExercise={(id, ids) => approveNewExercise(id, ids)}
+              onApproveNewExercise={(id, input) => approveNewExercise(id, input)}
               onRejectNewExercise={(id) => rejectNewExercise(id)}
               lowConfidenceIds={lowConfidenceIds}
               parseSuccessByMsgId={parseSuccessByMsgId}

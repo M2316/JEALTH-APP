@@ -11,26 +11,48 @@ import { GlassSurface } from '@/components/glass-surface';
 import { haptic } from '@/lib/haptics';
 import type { ChatMessage } from '@/types/chat';
 
+const EQUIPMENT_OPTIONS = ['바벨', '덤벨', '머신', '맨몸'] as const;
+
+export interface ApproveNewExerciseInput {
+  muscleGroupIds: string[];
+  equipment?: string;
+  name: string;
+}
+
 interface Props {
   message: ChatMessage;
   saving: boolean;
-  onApprove: (muscleGroupIds: string[]) => void;
+  onApprove: (input: ApproveNewExerciseInput) => void;
   onReject: () => void;
 }
 
 export function ChatNewExerciseCard({ message, saving, onApprove, onReject }: Props) {
-  const initial = useMemo(
+  const draft = message.draft;
+  const exercise = draft?.exercises[0];
+
+  const correctedName = exercise?.name ?? '';
+  const originalName = message.originalName;
+  const hasNameStep = !!originalName && originalName !== correctedName;
+
+  const initialStep: 'name' | 'meta' = hasNameStep ? 'name' : 'meta';
+  const [step, setStep] = useState<'name' | 'meta'>(initialStep);
+  const [chosenName, setChosenName] = useState<string>(
+    hasNameStep ? '' : correctedName,
+  );
+
+  const initialMuscles = useMemo(
     () =>
       new Set<string>(
         message.editedMuscleGroupIds ?? message.suggestedMuscleGroupIds ?? [],
       ),
     [message.editedMuscleGroupIds, message.suggestedMuscleGroupIds],
   );
-  const [selected, setSelected] = useState<Set<string>>(initial);
+  const [selectedMuscles, setSelectedMuscles] = useState<Set<string>>(initialMuscles);
+  const [selectedEquipment, setSelectedEquipment] = useState<string | undefined>(
+    message.suggestedEquipment,
+  );
 
-  if (!message.draft) return null;
-  const exercise = message.draft.exercises[0];
-  if (!exercise) return null;
+  if (!draft || !exercise) return null;
 
   const isSaved = message.status === 'saved';
   const isDiscarded = message.status === 'discarded';
@@ -39,10 +61,10 @@ export function ChatNewExerciseCard({ message, saving, onApprove, onReject }: Pr
   const showButtons = !isSaved && !isDiscarded && !isError;
 
   const suggestedEmpty = (message.suggestedMuscleGroupIds ?? []).length === 0;
-  const canApprove = selected.size > 0 && !saving;
+  const canApprove = selectedMuscles.size > 0 && !saving;
 
-  const toggle = (id: string) => {
-    setSelected((prev) => {
+  const toggleMuscle = (id: string) => {
+    setSelectedMuscles((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -50,13 +72,24 @@ export function ChatNewExerciseCard({ message, saving, onApprove, onReject }: Pr
     });
   };
 
+  const toggleEquipment = (value: string) => {
+    setSelectedEquipment((prev) => (prev === value ? undefined : value));
+  };
+
+  const handleChooseName = (picked: string) => {
+    haptic.selection();
+    setChosenName(picked);
+    setStep('meta');
+  };
+
   const handleApprove = () => {
     if (!canApprove) return;
     haptic.medium();
-    const orderedIds = (message.muscleGroups ?? [])
-      .map((mg) => mg.id)
-      .filter((id) => selected.has(id));
-    onApprove(orderedIds);
+    onApprove({
+      muscleGroupIds: Array.from(selectedMuscles),
+      equipment: selectedEquipment,
+      name: chosenName || correctedName,
+    });
   };
 
   const handleReject = () => {
@@ -73,90 +106,161 @@ export function ChatNewExerciseCard({ message, saving, onApprove, onReject }: Pr
       >
         <Text style={styles.title}>🆕 신규 운동 추가</Text>
 
-        {suggestedEmpty && !isSaved && (
-          <View style={styles.warnBanner}>
-            <Text style={styles.warnText}>
-              근육 그룹을 추정하지 못했어요. 선택 후 승인해주세요.
-            </Text>
+        {step === 'name' && hasNameStep && showButtons ? (
+          <View style={styles.section}>
+            <Text style={styles.label}>입력하신 운동명이 이게 맞나요?</Text>
+            <View style={styles.nameRow}>
+              <Pressable
+                testID="name-btn-original"
+                onPress={() => handleChooseName(originalName!)}
+                style={styles.nameBtn}
+              >
+                <Text style={styles.nameBtnText}>{originalName}</Text>
+              </Pressable>
+              <Pressable
+                testID="name-btn-corrected"
+                onPress={() => handleChooseName(correctedName)}
+                style={[styles.nameBtn, styles.nameBtnPrimary]}
+              >
+                <Text style={[styles.nameBtnText, styles.nameBtnTextPrimary]}>
+                  {correctedName}
+                </Text>
+              </Pressable>
+            </View>
           </View>
-        )}
+        ) : (
+          <>
+            {suggestedEmpty && !isSaved && (
+              <View style={styles.warnBanner}>
+                <Text style={styles.warnText}>
+                  근육 그룹을 추정하지 못했어요. 선택 후 승인해주세요.
+                </Text>
+              </View>
+            )}
 
-        <View style={styles.section}>
-          <Text style={styles.label}>운동명</Text>
-          <Text style={[styles.exerciseName, dim && styles.dimText]}>
-            {exercise.name}
-          </Text>
-        </View>
+            <View style={styles.section}>
+              <Text style={styles.label}>운동명</Text>
+              <Text style={[styles.exerciseName, dim && styles.dimText]}>
+                {chosenName || correctedName}
+              </Text>
+            </View>
 
-        <View style={styles.section}>
-          <Text style={styles.label}>근육 그룹 (탭하여 선택)</Text>
-          <View style={styles.chipRow}>
-            {(message.muscleGroups ?? []).map((mg) => {
-              const active = selected.has(mg.id);
-              return (
+            <View style={styles.section}>
+              <Text style={styles.label}>근육 그룹 (탭하여 선택)</Text>
+              <View style={styles.chipRow}>
+                {(message.muscleGroups ?? []).map((mg) => {
+                  const active = selectedMuscles.has(mg.id);
+                  return (
+                    <Pressable
+                      key={mg.id}
+                      testID={`mg-chip-${mg.id}`}
+                      accessibilityState={{ selected: active }}
+                      onPress={() => toggleMuscle(mg.id)}
+                      disabled={!showButtons}
+                      style={[
+                        styles.chip,
+                        active && styles.chipActive,
+                        dim && styles.chipDim,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          active && styles.chipTextActive,
+                        ]}
+                      >
+                        {mg.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.label}>머신 (선택)</Text>
+              <View style={styles.chipRow}>
+                {EQUIPMENT_OPTIONS.map((opt) => {
+                  const active = selectedEquipment === opt;
+                  return (
+                    <Pressable
+                      key={opt}
+                      testID={`eq-chip-${opt}`}
+                      accessibilityState={{ selected: active }}
+                      onPress={() => toggleEquipment(opt)}
+                      disabled={!showButtons}
+                      style={[
+                        styles.chip,
+                        active && styles.chipActive,
+                        dim && styles.chipDim,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          active && styles.chipTextActive,
+                        ]}
+                      >
+                        {opt}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.label}>세트</Text>
+              {exercise.sets.map((s) => (
+                <Text key={s.round} style={[styles.setLine, dim && styles.dimText]}>
+                  {s.round}세트 · {s.reps}reps · {s.weight}{s.weightUnit}
+                </Text>
+              ))}
+            </View>
+
+            {isSaved && (
+              <View style={styles.savedFooter}>
+                <Text style={styles.savedLabel}>✅ 저장됨</Text>
+              </View>
+            )}
+
+            {showButtons && (
+              <View style={styles.buttonRow}>
                 <Pressable
-                  key={mg.id}
-                  testID={`mg-chip-${mg.id}`}
-                  accessibilityState={{ selected: active }}
-                  onPress={() => toggle(mg.id)}
-                  disabled={!showButtons}
-                  style={[
-                    styles.chip,
-                    active && styles.chipActive,
-                    dim && styles.chipDim,
-                  ]}
+                  testID="reject-btn"
+                  onPress={handleReject}
+                  style={styles.rejectBtn}
+                  hitSlop={8}
                 >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      active && styles.chipTextActive,
-                    ]}
-                  >
-                    {mg.name}
-                  </Text>
+                  <Text style={styles.rejectText}>거절</Text>
                 </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.label}>세트</Text>
-          {exercise.sets.map((s) => (
-            <Text key={s.round} style={[styles.setLine, dim && styles.dimText]}>
-              {s.round}세트 · {s.reps}reps · {s.weight}{s.weightUnit}
-            </Text>
-          ))}
-        </View>
-
-        {isSaved && (
-          <View style={styles.savedFooter}>
-            <Text style={styles.savedLabel}>✅ 저장됨</Text>
-          </View>
+                <Pressable
+                  testID="approve-btn"
+                  accessibilityState={{ disabled: !canApprove }}
+                  onPress={handleApprove}
+                  disabled={!canApprove}
+                  style={[styles.approveBtn, !canApprove && styles.approveDisabled]}
+                >
+                  {saving ? (
+                    <ActivityIndicator color={DarkTheme.bgPrimary} />
+                  ) : (
+                    <Text style={styles.approveText}>✅ 추가하고 저장</Text>
+                  )}
+                </Pressable>
+              </View>
+            )}
+          </>
         )}
 
-        {showButtons && (
+        {step === 'name' && hasNameStep && showButtons && (
           <View style={styles.buttonRow}>
             <Pressable
               testID="reject-btn"
               onPress={handleReject}
-              style={styles.rejectBtn}
+              style={[styles.rejectBtn, { flex: 1 }]}
               hitSlop={8}
             >
               <Text style={styles.rejectText}>거절</Text>
-            </Pressable>
-            <Pressable
-              testID="approve-btn"
-              accessibilityState={{ disabled: !canApprove }}
-              onPress={handleApprove}
-              disabled={!canApprove}
-              style={[styles.approveBtn, !canApprove && styles.approveDisabled]}
-            >
-              {saving ? (
-                <ActivityIndicator color={DarkTheme.bgPrimary} />
-              ) : (
-                <Text style={styles.approveText}>✅ 추가하고 저장</Text>
-              )}
             </Pressable>
           </View>
         )}
@@ -195,6 +299,22 @@ const styles = StyleSheet.create({
   dimText: { color: '#888' },
   savedFooter: { alignItems: 'flex-end' },
   savedLabel: { color: '#7ee37e', fontSize: 12, fontWeight: '600' },
+  nameRow: { flexDirection: 'row', gap: 10 },
+  nameBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: DarkTheme.bgElevated,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: DarkTheme.bgBorder,
+  },
+  nameBtnPrimary: {
+    backgroundColor: DarkTheme.accentCyanGlow,
+    borderColor: DarkTheme.accentCyan,
+  },
+  nameBtnText: { color: DarkTheme.textPrimary, fontWeight: '700' },
+  nameBtnTextPrimary: { color: DarkTheme.accentCyan },
   buttonRow: { flexDirection: 'row', gap: 8 },
   rejectBtn: {
     flex: 1,
