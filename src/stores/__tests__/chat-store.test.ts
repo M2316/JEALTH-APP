@@ -145,6 +145,34 @@ describe('chat-store', () => {
     expect(useChatStore.getState().messages.length).toBeGreaterThanOrEqual(3);
   });
 
+  it('approveNewExercise inserts error message on API failure, leaves original pending', async () => {
+    sendMock.mockResolvedValue({
+      reply: '스쿼트 신규 추가할까요?',
+      confidence: 'high',
+      parseSuccess: false,
+      kind: 'new_exercise',
+      draft: {
+        exercises: [{
+          exerciseId: '', name: '스쿼트',
+          sets: [{ round: 1, reps: 10, weight: 100, weightUnit: 'kg' }],
+        }],
+      },
+      suggestedMuscleGroupIds: ['mg-leg'],
+      muscleGroups: [{ id: 'mg-leg', name: '하체' }],
+    });
+    approveNewExerciseMock.mockRejectedValue(new Error('network'));
+    await useChatStore.getState().openForDate('2026-04-19');
+    await useChatStore.getState().sendMessage('스쿼트 100 10');
+    const draftMsg = useChatStore.getState().messages.find((m) => m.role === 'assistant')!;
+    await useChatStore.getState().approveNewExercise(draftMsg.id, ['mg-leg']);
+    const latest = useChatStore.getState().messages;
+    const errorMsg = latest[latest.length - 1];
+    expect(errorMsg.status).toBe('error');
+    expect(errorMsg.content).toMatch(/network/);
+    const stillPending = latest.find((m) => m.id === draftMsg.id)!;
+    expect(stillPending.status).toBe('pending');
+  });
+
   it('rejectNewExercise marks message discarded without server call', async () => {
     sendMock.mockResolvedValue({
       reply: '스쿼트 신규 추가할까요?',

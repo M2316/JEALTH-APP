@@ -285,84 +285,108 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const draftExercise = msg.draft.exercises[0];
     if (!draftExercise) return;
 
-    const res = await approveNewExerciseApi({
-      date,
-      name: draftExercise.name,
-      muscleGroupIds,
-      sets: draftExercise.sets.map((s) => ({
-        round: s.round,
-        reps: s.reps,
-        weight: s.weight,
-        weightUnit: s.weightUnit,
-      })),
-    });
-
-    // exercise-store 캐시에 새 운동 추가 (기존 중복 제거 후 앞에 삽입)
     try {
-      const exStore = useExerciseStore.getState();
-      useExerciseStore.setState({
-        exercises: [
-          res.exercise,
-          ...exStore.exercises.filter((e) => e.id !== res.exercise.id),
-        ],
+      const res = await approveNewExerciseApi({
+        date,
+        name: draftExercise.name,
+        muscleGroupIds,
+        sets: draftExercise.sets.map((s) => ({
+          round: s.round,
+          reps: s.reps,
+          weight: s.weight,
+          weightUnit: s.weightUnit,
+        })),
       });
-    } catch {
-      // ignore store sync errors in tests
-    }
 
-    // workout-store 동기화
-    try {
-      const workoutState = useWorkoutStore.getState();
-      if (workoutState.selectedDate === date) {
-        const idx = workoutState.routines.findIndex((r) => r.id === res.routine.id);
-        const updatedRoutines =
-          idx >= 0
-            ? workoutState.routines.map((r) =>
-                r.id === res.routine.id ? res.routine : r,
-              )
-            : [...workoutState.routines, res.routine];
-        useWorkoutStore.setState({ routines: updatedRoutines });
+      // exercise-store 캐시에 새 운동 추가 (기존 중복 제거 후 앞에 삽입)
+      try {
+        const exStore = useExerciseStore.getState();
+        useExerciseStore.setState({
+          exercises: [
+            res.exercise,
+            ...exStore.exercises.filter((e) => e.id !== res.exercise.id),
+          ],
+        });
+      } catch {
+        // ignore store sync errors in tests
       }
-    } catch {
-      // ignore
+
+      // workout-store 동기화
+      try {
+        const workoutState = useWorkoutStore.getState();
+        if (workoutState.selectedDate === date) {
+          const idx = workoutState.routines.findIndex((r) => r.id === res.routine.id);
+          const updatedRoutines =
+            idx >= 0
+              ? workoutState.routines.map((r) =>
+                  r.id === res.routine.id ? res.routine : r,
+                )
+              : [...workoutState.routines, res.routine];
+          useWorkoutStore.setState({ routines: updatedRoutines });
+        }
+      } catch {
+        // ignore
+      }
+
+      // 메시지 draft.exerciseId 를 실제 id 로 patch (DB + 메모리)
+      const patchedDraft: AssistantDraft = {
+        exercises: msg.draft.exercises.map((e, i) =>
+          i === 0 ? { ...e, exerciseId: res.exercise.id } : e,
+        ),
+      };
+      await updateMessageDraft(messageId, patchedDraft);
+      await updateMessageStatus(messageId, 'saved', res.routine.id);
+
+      const followupNow = Date.now();
+      const followupText = '저장했어요. 다른 운동도 추가할까요?';
+      const followupId = await insertMessage({
+        date,
+        role: 'assistant',
+        content: followupText,
+        status: 'saved',
+        createdAt: followupNow,
+      });
+      const followupMsg: ChatMessage = {
+        id: followupId,
+        date,
+        role: 'assistant',
+        content: followupText,
+        status: 'saved',
+        createdAt: followupNow,
+      };
+
+      set((s) => ({
+        messages: s.messages
+          .map((m) =>
+            m.id === messageId
+              ? { ...m, status: 'saved' as const, routineId: res.routine.id, draft: patchedDraft }
+              : m,
+          )
+          .concat(followupMsg),
+      }));
+    } catch (err) {
+      console.error('[chat-store] approveNewExercise failed', err);
+      const errorNow = Date.now();
+      const message = err instanceof Error ? err.message : '요청 실패';
+      const errorId = await insertMessage({
+        date,
+        role: 'assistant',
+        content: message,
+        status: 'error',
+        createdAt: errorNow,
+      });
+      const errorMessage: ChatMessage = {
+        id: errorId,
+        date,
+        role: 'assistant',
+        content: message,
+        status: 'error',
+        createdAt: errorNow,
+      };
+      set((s) => ({
+        messages: [...s.messages, errorMessage],
+      }));
     }
-
-    // 메시지 draft.exerciseId 를 실제 id 로 patch (DB + 메모리)
-    const patchedDraft: AssistantDraft = {
-      exercises: msg.draft.exercises.map((e, i) =>
-        i === 0 ? { ...e, exerciseId: res.exercise.id } : e,
-      ),
-    };
-    await updateMessageDraft(messageId, patchedDraft);
-    await updateMessageStatus(messageId, 'saved', res.routine.id);
-
-    const followupNow = Date.now();
-    const followupText = '저장했어요. 다른 운동도 추가할까요?';
-    const followupId = await insertMessage({
-      date,
-      role: 'assistant',
-      content: followupText,
-      status: 'saved',
-      createdAt: followupNow,
-    });
-    const followupMsg: ChatMessage = {
-      id: followupId,
-      date,
-      role: 'assistant',
-      content: followupText,
-      status: 'saved',
-      createdAt: followupNow,
-    };
-
-    set((s) => ({
-      messages: s.messages
-        .map((m) =>
-          m.id === messageId
-            ? { ...m, status: 'saved' as const, routineId: res.routine.id, draft: patchedDraft }
-            : m,
-        )
-        .concat(followupMsg),
-    }));
   },
 
   rejectNewExercise: async (messageId) => {
