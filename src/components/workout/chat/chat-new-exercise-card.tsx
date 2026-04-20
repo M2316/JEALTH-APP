@@ -213,7 +213,7 @@ export function ChatNewExerciseCard({ message, saving, onApprove, onReject }: Pr
               <Text style={styles.label}>세트</Text>
               {exercise.sets.map((s) => (
                 <Text key={s.round} style={[styles.setLine, dim && styles.dimText]}>
-                  {s.round}세트 · {s.reps}reps · {s.weight}{s.weightUnit}
+                  {s.round}세트 · {s.weight}{s.weightUnit} · {s.reps}reps
                 </Text>
               ))}
             </View>
