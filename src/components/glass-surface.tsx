@@ -1,4 +1,5 @@
 import { GlassView, isGlassEffectAPIAvailable } from 'expo-glass-effect';
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Platform, StyleSheet, View, type ViewProps } from 'react-native';
 
@@ -9,6 +10,7 @@ export interface GlassSurfaceProps extends ViewProps {
   bordered?: boolean;
   borderRadius?: number;
   tintColor?: string;
+  liquid?: boolean;
 }
 
 const useNativeGlass = Platform.OS === 'ios' && isGlassEffectAPIAvailable();
@@ -18,6 +20,7 @@ export function GlassSurface({
   bordered = false,
   borderRadius = Spacing.three,
   tintColor,
+  liquid = false,
   style,
   children,
   ...rest
@@ -32,23 +35,45 @@ export function GlassSurface({
       <GlassView
         glassEffectStyle="regular"
         colorScheme="dark"
-        tintColor={tintColor}
+        tintColor={tintColor ?? (liquid ? DarkTheme.bgElevated : undefined)}
         style={[{ borderRadius, overflow: 'hidden' }, border, style]}
         {...rest}>
+        {liquid && (
+          <>
+            <LinearGradient
+              pointerEvents="none"
+              colors={['rgba(255,255,255,0.12)', 'rgba(0,0,0,0.15)']}
+              style={StyleSheet.absoluteFill}
+            />
+            <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.innerStroke, { borderRadius }]} />
+          </>
+        )}
         {children}
       </GlassView>
     );
   }
 
+  const solidBg = liquid ? DarkTheme.bgElevated : bg;
+
   return (
     <View
       style={[
-        { backgroundColor: bg, borderRadius, overflow: 'hidden' },
+        { backgroundColor: solidBg, borderRadius, overflow: 'hidden' },
         border,
         styles.shadow,
         style,
       ]}
       {...rest}>
+      {liquid && (
+        <>
+          <LinearGradient
+            pointerEvents="none"
+            colors={['rgba(255,255,255,0.12)', 'rgba(0,0,0,0.15)']}
+            style={StyleSheet.absoluteFill}
+          />
+          <View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.innerStroke, { borderRadius }]} />
+        </>
+      )}
       {children}
     </View>
   );
@@ -63,10 +88,12 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 8,
       },
-      android: {
-        elevation: 4,
-      },
+      android: { elevation: 4 },
       default: {},
     }),
+  },
+  innerStroke: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.18)',
   },
 });

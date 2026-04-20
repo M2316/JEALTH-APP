@@ -35,7 +35,7 @@ export function ChatDraftCard({ message, isLowConfidence, parseSuccess, onApprov
               <Text style={[styles.exerciseName, dim && styles.dimText]}>{ex.name}</Text>
               {ex.sets.map((s) => (
                 <Text key={s.round} style={[styles.setLine, dim && styles.dimText]}>
-                  {s.round}세트 · {s.reps}reps · {s.weight}{s.weightUnit}
+                  {s.round}세트 · {s.weight}{s.weightUnit} · {s.reps}reps
                 </Text>
               ))}
             </View>

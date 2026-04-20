@@ -99,3 +99,24 @@ export function copyRoutine(id: string, date: string) {
     body: JSON.stringify({ date }),
   });
 }
+
+export function reorderExercises(routineId: string, orderedIds: string[]) {
+  return api<WorkoutRoutine>(`/routines/${routineId}/exercises/reorder`, {
+    method: 'PATCH',
+    body: JSON.stringify({ orderedIds }),
+  });
+}
+
+export function reorderSets(
+  routineId: string,
+  exerciseId: string,
+  orderedIds: string[],
+) {
+  return api<WorkoutRoutine>(
+    `/routines/${routineId}/exercises/${exerciseId}/sets/reorder`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ orderedIds }),
+    },
+  );
+}

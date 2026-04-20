@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Pressable, StyleSheet, Text, ScrollView } from 'react-native';
+import { NestableDraggableFlatList, RenderItemParams } from 'react-native-draggable-flatlist';
 
 import { GlassSurface } from '../glass-surface';
 import { MuscleGroupBadge } from './muscle-group-badge';
@@ -7,7 +8,7 @@ import { WorkoutSetRow } from './workout-set-row';
 
 import { DarkTheme } from '@/constants/theme';
 import { haptic } from '@/lib/haptics';
-import type { WorkoutExercise, WeightUnit } from '@/types/workout';
+import type { WorkoutExercise, WorkoutSet, WeightUnit } from '@/types/workout';
 
 interface Props {
   workoutExercise: WorkoutExercise;
@@ -20,6 +21,8 @@ interface Props {
   onDeleteSet: (exerciseOrder: number, setIndex: number) => void;
   onAddSet: (exerciseOrder: number) => void;
   onDeleteExercise: (exerciseOrder: number) => void;
+  onDragStart?: () => void;
+  onReorderSets?: (exerciseId: string, orderedIds: string[]) => Promise<void>;
 }
 
 export function WorkoutExerciseCard({
@@ -28,11 +31,22 @@ export function WorkoutExerciseCard({
   onDeleteSet,
   onAddSet,
   onDeleteExercise,
+  onDragStart,
+  onReorderSets,
 }: Props) {
   const { exercise, order, sets } = workoutExercise;
 
   return (
     <GlassSurface bordered style={styles.card}>
+      {onDragStart && (
+        <Pressable
+          onLongPress={() => { haptic.heavy(); onDragStart(); }}
+          delayLongPress={250}
+          style={styles.dragHandle}
+          hitSlop={4}>
+          <Text style={styles.dragHandleIcon}>≡</Text>
+        </Pressable>
+      )}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.exerciseName}>{exercise.name}</Text>
@@ -58,15 +72,42 @@ export function WorkoutExerciseCard({
       </View>
 
       <View style={styles.sets}>
-        {sets.map((s, i) => (
-          <WorkoutSetRow
-            key={s.id ?? `set-${i}`}
-            set={s}
-            roundNumber={s.round}
-            onUpdate={(field, value) => onUpdateSet(order, i, field, value)}
-            onDelete={() => onDeleteSet(order, i)}
+        {sets.every((s) => !!s.id) && onReorderSets && workoutExercise.id ? (
+          <NestableDraggableFlatList<WorkoutSet>
+            data={sets}
+            keyExtractor={(s) => s.id!}
+            onDragEnd={async ({ data }) => {
+              const newIds = data.map((s) => s.id!).join(',');
+              const prevIds = sets.map((s) => s.id!).join(',');
+              if (newIds === prevIds) return;
+              await onReorderSets(workoutExercise.id!, data.map((s) => s.id!));
+            }}
+            renderItem={({ item, drag, isActive, getIndex }: RenderItemParams<WorkoutSet>) => {
+              const i = getIndex() ?? 0;
+              return (
+                <View style={{ opacity: isActive ? 0.9 : 1, transform: [{ scale: isActive ? 1.02 : 1 }] }}>
+                  <WorkoutSetRow
+                    set={item}
+                    roundNumber={i + 1}
+                    onUpdate={(field, value) => onUpdateSet(order, i, field, value)}
+                    onDelete={() => onDeleteSet(order, i)}
+                    onDragStart={drag}
+                  />
+                </View>
+              );
+            }}
           />
-        ))}
+        ) : (
+          sets.map((s, i) => (
+            <WorkoutSetRow
+              key={s.id ?? `set-${i}`}
+              set={s}
+              roundNumber={s.round}
+              onUpdate={(field, value) => onUpdateSet(order, i, field, value)}
+              onDelete={() => onDeleteSet(order, i)}
+            />
+          ))
+        )}
       </View>
 
       <Pressable
@@ -126,5 +167,15 @@ const styles = StyleSheet.create({
     color: DarkTheme.accentCyan,
     fontSize: 14,
     fontWeight: '600',
+  },
+  dragHandle: {
+    alignItems: 'center',
+    paddingVertical: 4,
+    marginBottom: 4,
+  },
+  dragHandleIcon: {
+    color: DarkTheme.textTertiary,
+    fontSize: 18,
+    letterSpacing: 2,
   },
 });

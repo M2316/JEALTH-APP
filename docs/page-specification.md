@@ -125,11 +125,26 @@
 - 근육 그룹별 필터링
 - 모달 내에서 새 운동 생성 페이지(`/exercises/create`)로 이동 가능
 
+#### FAB (+) 버튼
+
+- 펼치지 않은 상태: 메뉴 아이템이 DOM에 없어 터치 통과
+- 펼친 상태: mount 되어 상호작용 가능
+- 접은 상태: unmount 처리
+
+#### 운동 카드 및 드래그
+
+- 카드 상단의 핸들(`≡`) long-press (약 250ms): 카드 들려서 드래그 가능
+- Drop 시 순서 저장: `PATCH /routines/:id/exercises/reorder`
+
 #### 세트 관리
 
-- 세트별 반복 횟수(reps), 무게(weight), 단위(kg/lbs) 편집
+- **입력 순서**: 무게(weight) × 횟수(reps)
+- 무게 단위(kg/lbs) 표시는 무게 오른쪽에 붙음
+- 세트 행의 round 번호 long-press: 세트 드래그 가능
+- 세트 drop 시 `round` 재할당: `PATCH /routines/:id/exercises/:exerciseId/sets/reorder`
 - 세트 추가: 마지막 세트 복제
 - 세트 삭제: 인덱스 기반 제거
+- Dial 스와이프(무게/횟수) 틱당 haptic: heavy
 
 #### 운동 삭제
 
@@ -144,6 +159,10 @@
 #### 자동 저장
 
 - 편집 후 1.5초 디바운스 자동 저장 (`PATCH /routines/{id}`)
+
+#### Toast 스타일
+
+- Liquid Glass: 불투명 배경 + inner stroke + 그라디언트 하이라이트
 
 #### UI 상태
 
@@ -160,6 +179,8 @@
 | PATCH | `/routines/{id}` | 루틴 수정 |
 | DELETE | `/routines/{id}` | 루틴 삭제 |
 | POST | `/routines/{id}/copy` | 루틴 복사 |
+| PATCH | `/routines/:id/exercises/reorder` | 운동 순서 재정렬 |
+| PATCH | `/routines/:id/exercises/:exerciseId/sets/reorder` | 세트 순서 재정렬 |
 
 ---
 

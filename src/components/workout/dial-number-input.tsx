@@ -24,7 +24,7 @@ interface DialNumberInputProps {
 }
 
 const triggerHaptic = () => {
-  haptic.light();
+  haptic.heavy();
 };
 
 export function DialNumberInput({

@@ -13,25 +13,25 @@ interface Props {
   roundNumber: number;
   onUpdate: (field: 'reps' | 'weight' | 'weightUnit', value: number | WeightUnit) => void;
   onDelete: () => void;
+  onDragStart?: () => void;
 }
 
-export function WorkoutSetRow({ set, roundNumber, onUpdate, onDelete }: Props) {
+export function WorkoutSetRow({ set, roundNumber, onUpdate, onDelete, onDragStart }: Props) {
   const [overlayField, setOverlayField] = useState<'reps' | 'weight' | null>(null);
 
   return (
     <View style={styles.row}>
-      <Text style={styles.round}>{roundNumber}</Text>
-
-      <DialNumberInput
-        value={set.reps}
-        onChange={(v) => onUpdate('reps', v)}
-        step={1}
-        decimalPlaces={0}
-        width={64}
-        onTap={() => setOverlayField('reps')}
-      />
-
-      <Text style={styles.times}>×</Text>
+      {onDragStart ? (
+        <Pressable
+          onLongPress={() => { haptic.heavy(); onDragStart(); }}
+          delayLongPress={250}
+          hitSlop={4}
+          style={styles.roundHandle}>
+          <Text style={styles.round}>{roundNumber}</Text>
+        </Pressable>
+      ) : (
+        <Text style={styles.round}>{roundNumber}</Text>
+      )}
 
       <DialNumberInput
         value={set.weight}
@@ -60,6 +60,17 @@ export function WorkoutSetRow({ set, roundNumber, onUpdate, onDelete }: Props) {
           {set.weightUnit}
         </Text>
       </Pressable>
+
+      <Text style={styles.times}>×</Text>
+
+      <DialNumberInput
+        value={set.reps}
+        onChange={(v) => onUpdate('reps', v)}
+        step={1}
+        decimalPlaces={0}
+        width={64}
+        onTap={() => setOverlayField('reps')}
+      />
 
       <Pressable onPress={() => { haptic.warning(); onDelete(); }} style={styles.deleteBtn} hitSlop={8}>
         <Text style={styles.deleteIcon}>✕</Text>
@@ -93,6 +104,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     width: 24,
     textAlign: 'center',
+  },
+  roundHandle: {
+    width: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   times: {
     color: DarkTheme.textTertiary,
