@@ -20,6 +20,7 @@ interface Props {
   onDeleteSet: (exerciseOrder: number, setIndex: number) => void;
   onAddSet: (exerciseOrder: number) => void;
   onDeleteExercise: (exerciseOrder: number) => void;
+  onDragStart?: () => void;
 }
 
 export function WorkoutExerciseCard({
@@ -28,11 +29,21 @@ export function WorkoutExerciseCard({
   onDeleteSet,
   onAddSet,
   onDeleteExercise,
+  onDragStart,
 }: Props) {
   const { exercise, order, sets } = workoutExercise;
 
   return (
     <GlassSurface bordered style={styles.card}>
+      {onDragStart && (
+        <Pressable
+          onLongPress={() => { haptic.heavy(); onDragStart(); }}
+          delayLongPress={250}
+          style={styles.dragHandle}
+          hitSlop={4}>
+          <Text style={styles.dragHandleIcon}>≡</Text>
+        </Pressable>
+      )}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.exerciseName}>{exercise.name}</Text>
@@ -126,5 +137,15 @@ const styles = StyleSheet.create({
     color: DarkTheme.accentCyan,
     fontSize: 14,
     fontWeight: '600',
+  },
+  dragHandle: {
+    alignItems: 'center',
+    paddingVertical: 4,
+    marginBottom: 4,
+  },
+  dragHandleIcon: {
+    color: DarkTheme.textTertiary,
+    fontSize: 18,
+    letterSpacing: 2,
   },
 });

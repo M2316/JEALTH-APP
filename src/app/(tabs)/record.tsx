@@ -8,8 +8,8 @@ import {
   Alert,
   useWindowDimensions,
 } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import DraggableFlatList, { RenderItemParams } from 'react-native-draggable-flatlist';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -58,6 +58,7 @@ export default function RecordScreen() {
     updateRoutine,
     deleteRoutine,
     copyFromRoutine,
+    reorderExercises,
     pendingExerciseToAdd,
     setPendingExerciseToAdd,
   } = useWorkoutStore();
@@ -66,6 +67,7 @@ export default function RecordScreen() {
   const [copyVisible, setCopyVisible] = useState(false);
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [chatVisible, setChatVisible] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
 
   const [localExercises, setLocalExercises] = useState<WE[]>([]);
   const [routineId, setRoutineId] = useState<string | undefined>();
@@ -518,23 +520,49 @@ export default function RecordScreen() {
               <ActivityIndicator color={DarkTheme.accentCyan} />
             </View>
           ) : hasExercises ? (
-            <KeyboardAwareScrollView
+            <DraggableFlatList<WE>
+              data={localExercises}
+              keyExtractor={(item) => item.id ?? `tmp-${item.order}`}
               contentContainerStyle={styles.scrollContent}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
-              bottomOffset={24}>
-              {localExercises.map((we) => (
-                <WorkoutExerciseCard
-                  key={`${routineId}-${we.order}`}
-                  workoutExercise={we}
-                  onUpdateSet={handleUpdateSet}
-                  onDeleteSet={handleDeleteSet}
-                  onAddSet={handleAddSet}
-                  onDeleteExercise={handleDeleteExercise}
-                />
-              ))}
-              <View style={{ height: 120 }} />
-            </KeyboardAwareScrollView>
+              ListFooterComponent={<View style={{ height: 120 }} />}
+              onDragBegin={() => {
+                setIsReordering(true);
+                haptic.heavy();
+              }}
+              onDragEnd={async ({ data }) => {
+                setIsReordering(false);
+                if (!routineId) return;
+                const newIds = data.map((e) => e.id).filter((id): id is string => !!id);
+                const prevIds = localExercises.map((e) => e.id).filter((id): id is string => !!id);
+                if (newIds.join(',') === prevIds.join(',')) return;
+                setLocalExercises(data);
+                try {
+                  await reorderExercises(routineId, newIds);
+                  haptic.success();
+                } catch (e) {
+                  toast({
+                    message: e instanceof Error ? e.message : '순서 변경 실패',
+                    variant: 'error',
+                  });
+                  await loadRoutines();
+                }
+              }}
+              renderItem={({ item, drag, isActive }: RenderItemParams<WE>) => (
+                <Animated.View style={{ opacity: isActive ? 0.9 : 1, transform: [{ scale: isActive ? 1.03 : 1 }] }}>
+                  <WorkoutExerciseCard
+                    key={`${routineId}-${item.id ?? item.order}`}
+                    workoutExercise={item}
+                    onUpdateSet={handleUpdateSet}
+                    onDeleteSet={handleDeleteSet}
+                    onAddSet={handleAddSet}
+                    onDeleteExercise={handleDeleteExercise}
+                    onDragStart={drag}
+                  />
+                </Animated.View>
+              )}
+            />
           ) : (
             <View style={styles.center}>
               <Text style={styles.emptyIcon}>🏋️</Text>
@@ -575,7 +603,7 @@ export default function RecordScreen() {
           onAddExercise={() => setPickerVisible(true)}
           onCopyRoutine={() => setCopyVisible(true)}
           onOpenChat={() => setChatVisible(true)}
-          hidden={keyboardVisible}
+          hidden={keyboardVisible || isReordering}
         />
       ) : (
         <Animated.View style={[styles.bottomBarWrapper, bottomBarAnimStyle]}>
