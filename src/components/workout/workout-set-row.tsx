@@ -23,17 +23,6 @@ export function WorkoutSetRow({ set, roundNumber, onUpdate, onDelete }: Props) {
       <Text style={styles.round}>{roundNumber}</Text>
 
       <DialNumberInput
-        value={set.reps}
-        onChange={(v) => onUpdate('reps', v)}
-        step={1}
-        decimalPlaces={0}
-        width={64}
-        onTap={() => setOverlayField('reps')}
-      />
-
-      <Text style={styles.times}>×</Text>
-
-      <DialNumberInput
         value={set.weight}
         onChange={(v) => onUpdate('weight', v)}
         step={0.5}
@@ -60,6 +49,17 @@ export function WorkoutSetRow({ set, roundNumber, onUpdate, onDelete }: Props) {
           {set.weightUnit}
         </Text>
       </Pressable>
+
+      <Text style={styles.times}>×</Text>
+
+      <DialNumberInput
+        value={set.reps}
+        onChange={(v) => onUpdate('reps', v)}
+        step={1}
+        decimalPlaces={0}
+        width={64}
+        onTap={() => setOverlayField('reps')}
+      />
 
       <Pressable onPress={() => { haptic.warning(); onDelete(); }} style={styles.deleteBtn} hitSlop={8}>
         <Text style={styles.deleteIcon}>✕</Text>
