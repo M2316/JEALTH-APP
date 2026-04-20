@@ -63,6 +63,7 @@ function Toast({ item, onAutoHide }: ToastProps) {
     <Animated.View style={[styles.toastWrapper, animStyle]} pointerEvents="none">
       <GlassSurface
         bordered
+        liquid
         borderRadius={22}
         style={[styles.toast, { borderColor: BORDER[item.variant] }]}>
         <Text style={styles.icon}>{ICON[item.variant]}</Text>
