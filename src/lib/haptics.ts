@@ -10,6 +10,9 @@ export const haptic = {
   medium: () => {
     if (!isWeb) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   },
+  heavy: () => {
+    if (!isWeb) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+  },
   selection: () => {
     if (!isWeb) Haptics.selectionAsync();
   },
