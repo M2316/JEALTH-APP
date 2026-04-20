@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { DarkTheme } from '@/constants/theme';
 import Animated, {
   FadeIn,
@@ -45,11 +45,9 @@ export function FABActionButton({
     iconRotation.value = withTiming(0, { duration: DURATION });
   };
 
-  const prevHidden = useSharedValue(hidden);
-  if (prevHidden.value !== hidden) {
-    prevHidden.value = hidden;
+  useEffect(() => {
     hiddenProgress.value = withTiming(hidden ? 200 : 0, { duration: 200 });
-  }
+  }, [hidden, hiddenProgress]);
 
   const containerStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: hiddenProgress.value }],

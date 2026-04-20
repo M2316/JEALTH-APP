@@ -539,6 +539,11 @@ export default function RecordScreen() {
                 onDragEnd={async ({ data }) => {
                   setIsReordering(false);
                   if (!routineId) return;
+                  if (data.some((e) => !e.id)) {
+                    // Some exercises not yet saved — can't reorder server-side. Ignore the drop.
+                    await loadRoutines();
+                    return;
+                  }
                   const newIds = data.map((e) => e.id).filter((id): id is string => !!id);
                   const prevIds = localExercises.map((e) => e.id).filter((id): id is string => !!id);
                   if (newIds.join(',') === prevIds.join(',')) return;
